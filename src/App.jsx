@@ -5,6 +5,7 @@ import { TOOLS, SHORTCUTS } from '@/constants';
 import TopToolbar from '@/components/panels/TopToolbar';
 import Canvas from '@/components/canvas/Canvas';
 import { PWAUpdatePrompt } from '@/components/ui/PWAUpdatePrompt';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import './App.css';
 
 const LeftSidebar = lazy(() => import('@/components/panels/LeftSidebar'));
@@ -90,6 +91,7 @@ function App() {
   const [contextMenu, setContextMenu] = useState(null);
   const [toast, setToast] = useState(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [confirmation, setConfirmation] = useState(null);
   
   const {
     initialize,
@@ -473,7 +475,26 @@ function App() {
       onContextMenu={handleContextMenu}
     >
       {/* Top Toolbar */}
-      <TopToolbar />
+      <TopToolbar
+        onConfirmLoadSamples={() => setConfirmation({
+          type: 'info',
+          title: 'Load Sample Data',
+          message: 'This will load sample shapes to demonstrate CanvasFlow features. Continue?',
+          onConfirm: () => {
+            useCanvasStore.getState().initializeWithSamples();
+            setToast({ message: 'Sample data loaded', type: 'success' });
+          }
+        })}
+        onConfirmClear={() => setConfirmation({
+          type: 'warning',
+          title: 'Clear Canvas',
+          message: 'Are you sure you want to clear the canvas? This cannot be undone.',
+          onConfirm: () => {
+            useCanvasStore.getState().clearCanvas();
+            setToast({ message: 'Canvas cleared', type: 'info' });
+          }
+        })}
+      />
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
@@ -604,6 +625,22 @@ function App() {
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Confirmation Dialog */}
+      <AnimatePresence>
+        {confirmation && (
+          <ConfirmDialog
+            title={confirmation.title}
+            message={confirmation.message}
+            type={confirmation.type}
+            onConfirm={() => {
+              confirmation.onConfirm();
+              setConfirmation(null);
+            }}
+            onCancel={() => setConfirmation(null)}
+          />
         )}
       </AnimatePresence>
 

@@ -84,7 +84,7 @@ const ActionButton = ({ onClick, icon: Icon, label, disabled, shortcut, variant 
   );
 };
 
-const TopToolbar = () => {
+const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
   const [showFileMenu, setShowFileMenu] = useState(false);
   const [showViewMenu, setShowViewMenu] = useState(false);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
@@ -179,16 +179,12 @@ const TopToolbar = () => {
   };
 
   const handleLoadSamples = () => {
-    if (confirm('This will load sample shapes to demonstrate CanvasFlow features. Continue?')) {
-      initializeWithSamples();
-      setShowFileMenu(false);
-    }
+    onConfirmLoadSamples();
+    setShowFileMenu(false);
   };
 
   const handleClear = () => {
-    if (confirm('Are you sure you want to clear the canvas? This cannot be undone.')) {
-      clearCanvas();
-    }
+    onConfirmClear();
     setShowFileMenu(false);
   };
 
