@@ -1,49 +1,64 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Settings2, 
-  Move, 
-  Maximize2, 
-  Palette, 
-  Type,
-  Hash,
-  Sliders,
-  ChevronDown,
-  ChevronUp,
-  RotateCw,
-  Eye,
-  EyeOff,
-  Lock,
-  Unlock
+import {
+  Settings2, ChevronRight, Link2, Unlink2,
+  AlignLeft, AlignCenter, AlignRight, AlignJustify,
+  Bold, Italic, Type, Layers, Palette, Eye, PanelRightClose,
 } from 'lucide-react';
 import { useCanvasStore } from '@/store/useCanvasStore';
-import { COLORS, PRESET_COLORS, GRADIENT_PRESETS } from '@/constants';
+import ColorPicker from '@/components/ui/ColorPicker';
 
-const PropertyGroup = ({ title, icon: Icon, children, defaultOpen = true }) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-  
+const FONT_FAMILIES = [
+  { label: 'Inter', value: 'Inter, sans-serif' },
+  { label: 'Roboto', value: 'Roboto, sans-serif' },
+  { label: 'JetBrains Mono', value: '"JetBrains Mono", monospace' },
+  { label: 'System', value: 'system-ui, sans-serif' },
+  { label: 'Serif', value: 'serif' },
+  { label: 'Monospace', value: 'monospace' },
+];
+
+/* ─── Labelled number input ─── */
+const NumInput = ({ label, value, onChange, min, max, step = 1, unit = '' }) => (
+  <div className="prop-input h-8">
+    <span className="prop-input-label" title={label}>{label}</span>
+    <input
+      type="number"
+      value={typeof value === 'number' ? Math.round(value * 100) / 100 : value}
+      min={min}
+      max={max}
+      step={step}
+      onChange={(e) => onChange(Number(e.target.value))}
+    />
+    {unit && <span className="text-[10px] text-muted-foreground/60 pr-1.5 flex-shrink-0">{unit}</span>}
+  </div>
+);
+
+/* ─── Section wrapper ─── */
+const Section = ({ title, children, defaultOpen = true }) => {
+  const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="mb-2 border-b border-border/50 last:border-0">
+    <div className="border-b border-border/60 last:border-0">
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:bg-accent/30 transition-colors"
+        type="button"
+        className="flex items-center justify-between w-full px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground hover:text-foreground transition-colors"
+        onClick={() => setOpen(p => !p)}
       >
-        <span className="flex items-center gap-2">
-          <Icon size={14} />
-          {title}
-        </span>
-        {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+        {title}
+        <ChevronRight
+          size={12}
+          className={`transition-transform duration-200 ${open ? 'rotate-90' : ''}`}
+        />
       </button>
-      <AnimatePresence>
-        {isOpen && (
+      <AnimatePresence initial={false}>
+        {open && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
             className="overflow-hidden"
           >
-            <div className="px-4 py-3 space-y-3">
+            <div className="px-3 pb-3 flex flex-col gap-2">
               {children}
             </div>
           </motion.div>
@@ -53,437 +68,358 @@ const PropertyGroup = ({ title, icon: Icon, children, defaultOpen = true }) => {
   );
 };
 
-const PropertyRow = ({ label, children, tooltip }) => (
-  <div className="flex items-center justify-between gap-4" title={tooltip}>
-    <span className="text-sm text-muted-foreground">{label}</span>
-    <div className="flex items-center gap-2">
-      {children}
-    </div>
-  </div>
-);
-
-const NumberInput = ({ value, onChange, min, max, step = 1, suffix }) => (
-  <div className="flex items-center gap-1">
-    <input
-      type="number"
-      value={value === 'mixed' ? '' : value}
-      onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-      min={min}
-      max={max}
-      step={step}
-      placeholder={value === 'mixed' ? '—' : ''}
-      className="w-20 px-2 py-1.5 bg-muted border border-border rounded-md text-sm text-foreground focus:outline-none focus:border-indigo-500 tabular-nums transition-colors"
-    />
-    {suffix && <span className="text-xs text-muted-foreground/50">{suffix}</span>}
-  </div>
-);
-
-const ColorInput = ({ value, onChange, showPresets = true }) => {
-  const [showPicker, setShowPicker] = useState(false);
-  
-  return (
-    <div className="relative">
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => setShowPicker(!showPicker)}
-          className="w-8 h-8 rounded-lg border border-border overflow-hidden"
-          style={{ background: value?.startsWith('linear') ? value : value || '#6366F1' }}
-        />
-        <input
-          type="text"
-          value={value || ''}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="#6366F1"
-          className="w-24 px-2 py-1.5 bg-muted border border-border rounded-md text-sm text-foreground focus:outline-none focus:border-indigo-500 font-mono"
-        />
-      </div>
-      
-      {showPicker && showPresets && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute top-full left-0 mt-2 p-3 bg-popover border border-border rounded-lg shadow-xl z-50 w-56"
-        >
-          <div className="grid grid-cols-8 gap-1 mb-2">
-            {PRESET_COLORS.map((color) => (
-              <button
-                key={color}
-                onClick={() => { onChange(color); setShowPicker(false); }}
-                className="w-5 h-5 rounded hover:scale-110 transition-transform"
-                style={{ backgroundColor: color }}
-              />
-            ))}
-          </div>
-          <div className="border-t border-border pt-2">
-            <span className="text-xs text-muted-foreground/50 mb-1 block">Gradients</span>
-            <div className="space-y-1">
-              {GRADIENT_PRESETS.map((gradient, i) => (
-                <button
-                  key={i}
-                  onClick={() => { onChange(gradient); setShowPicker(false); }}
-                  className="w-full h-6 rounded hover:scale-[1.02] transition-transform"
-                  style={{ background: gradient }}
-                />
-              ))}
-            </div>
-          </div>
-        </motion.div>
-      )}
-    </div>
-  );
-};
-
-const ToggleButton = ({ active, onClick, icon: Icon, label }) => (
-  <button
-    onClick={onClick}
-    className={`
-      flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors
-      ${active
-        ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/50'
-        : 'bg-muted text-muted-foreground hover:bg-accent'
-      }
-    `}
-    aria-pressed={active}
-    aria-label={label}
-  >
-    <Icon size={14} aria-hidden="true" />
-    <span>{label}</span>
-  </button>
-);
-
-const PropertiesPanel = () => {
+/* ─── Main Panel ─── */
+const PropertiesPanel = ({ collapsed, onToggle }) => {
   const {
-    selectedIds,
-    elements,
-    updateElement,
-    updateElements,
-    getSelectedElements,
+    elements, selectedIds, updateElement, updateElements,
   } = useCanvasStore();
 
-  const selectedElements = getSelectedElements();
-  const hasSelection = selectedElements.length > 0;
-  const singleSelection = selectedElements.length === 1;
-  const multiSelection = selectedElements.length > 1;
+  const [linkedAspect, setLinkedAspect] = useState(false);
 
-  // Get common property (returns 'mixed' if values differ)
-  const getCommonProperty = (prop) => {
-    if (selectedElements.length === 0) return null;
-    const firstValue = selectedElements[0][prop];
-    const allSame = selectedElements.every((el) => el[prop] === firstValue);
-    return allSame ? firstValue : 'mixed';
-  };
+  const selectedElements = elements.filter(el => selectedIds.includes(el.id));
+  const isSingle = selectedElements.length === 1;
+  const isMulti = selectedElements.length > 1;
+  const el = isSingle ? selectedElements[0] : null;
+  const isText = el?.type === 'text';
+  const isShape = el && ['rectangle', 'circle', 'star', 'polygon'].includes(el.type);
+  const hasStroke = el && el.type !== 'text';
 
-  const handleUpdate = (prop, value) => {
-    selectedElements.forEach((el) => {
-      updateElement(el.id, { [prop]: value });
-    });
-  };
+  const update = useCallback((key, val) => {
+    if (!el) return;
+    updateElement(el.id, { [key]: val });
+  }, [el, updateElement]);
 
-  const handleToggleVisibility = () => {
-    const currentVisible = getCommonProperty('visible');
-    const newVisible = currentVisible === false ? true : false;
-    handleUpdate('visible', newVisible);
-  };
+  const updateMulti = useCallback((key, val) => {
+    updateElements(selectedIds, { [key]: val });
+  }, [selectedIds, updateElements]);
 
-  const handleToggleLock = () => {
-    const currentLocked = getCommonProperty('locked');
-    const newLocked = currentLocked === true ? false : true;
-    handleUpdate('locked', newLocked);
-  };
+  const handleWidthChange = useCallback((w) => {
+    if (!el) return;
+    if (linkedAspect && el.height && el.width) {
+      const ratio = el.height / el.width;
+      updateElement(el.id, { width: w, height: Math.round(w * ratio) });
+    } else {
+      update('width', w);
+    }
+  }, [el, update, updateElement, linkedAspect]);
 
-  if (!hasSelection) {
+  const handleHeightChange = useCallback((h) => {
+    if (!el) return;
+    if (linkedAspect && el.height && el.width) {
+      const ratio = el.width / el.height;
+      updateElement(el.id, { height: h, width: Math.round(h * ratio) });
+    } else {
+      update('height', h);
+    }
+  }, [el, update, updateElement, linkedAspect]);
+
+  // ── Empty states ──────────────────────────────────────
+  if (!collapsed && selectedElements.length === 0) {
     return (
-      <motion.div
-        initial={{ x: 20, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        className="w-80 bg-sidebar/95 backdrop-blur-sm border-l border-border flex flex-col"
-        role="complementary"
-        aria-label="Properties panel"
-      >
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
-          <Settings2 className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-          <span className="text-sm font-medium text-foreground">Properties</span>
+      <aside className="flex flex-col border-l border-border bg-[hsl(var(--sidebar-background))] overflow-hidden flex-shrink-0" style={{ width: 240 }}>
+        <PanelHeader onToggle={onToggle} />
+        <div className="flex flex-col items-center justify-center flex-1 gap-3 px-4">
+          <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center">
+            <Settings2 size={22} className="text-muted-foreground/40" />
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground font-medium">No selection</p>
+            <p className="text-[11px] text-muted-foreground/50 mt-1">Select an element to see its properties</p>
+          </div>
         </div>
-        <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
-          <Settings2 className="w-12 h-12 mb-3 opacity-30" aria-hidden="true" />
-          <span className="text-sm">No selection</span>
-          <span className="text-xs mt-1 text-muted-foreground/50">Select an element to edit properties</span>
-        </div>
-      </motion.div>
+      </aside>
     );
   }
 
-  const element = singleSelection ? selectedElements[0] : null;
-  const isVisible = getCommonProperty('visible') !== false;
-  const isLocked = getCommonProperty('locked') === true;
+  if (collapsed) return null;
 
   return (
-    <motion.div
-      initial={{ x: 20, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      className="w-80 bg-sidebar/95 backdrop-blur-sm border-l border-border flex flex-col overflow-hidden"
-      role="complementary"
-      aria-label="Properties panel"
+    <motion.aside
+      key="right-sidebar"
+      initial={{ width: 0, opacity: 0 }}
+      animate={{ width: 240, opacity: 1 }}
+      exit={{ width: 0, opacity: 0 }}
+      transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+      className="flex flex-col border-l border-border bg-[hsl(var(--sidebar-background))] overflow-hidden flex-shrink-0"
+      style={{ minWidth: 0 }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <div className="flex items-center gap-2">
-          <Settings2 className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-          <span className="text-sm font-medium text-foreground">
-            {multiSelection ? `${selectedElements.length} items selected` : 'Properties'}
-          </span>
+      <PanelHeader onToggle={onToggle} label={isSingle ? el.name || titleOf(el.type) : `${selectedIds.length} elements`} />
+
+      {/* ── Multi-select notice ── */}
+      {isMulti && (
+        <div className="px-3 py-2 border-b border-border/60 text-xs text-muted-foreground bg-primary/5">
+          <span className="text-primary font-medium">{selectedIds.length}</span> elements selected. Editing shared properties.
         </div>
-        {singleSelection && (
-          <span className="text-xs text-muted-foreground capitalize px-2 py-1 bg-muted rounded">
-            {element.type}
-          </span>
+      )}
+
+      <div className="flex-1 overflow-y-auto">
+        {/* ── Position & Size ── */}
+        {isSingle && (
+          <Section title="Transform" defaultOpen>
+            {/* X Y */}
+            <div className="grid grid-cols-2 gap-2">
+              <NumInput label="X" value={el.x ?? 0} onChange={v => update('x', v)} step={0.5} />
+              <NumInput label="Y" value={el.y ?? 0} onChange={v => update('y', v)} step={0.5} />
+            </div>
+
+            {/* W H */}
+            {(el.width !== undefined || el.radius !== undefined) && (
+              <div className="flex items-center gap-1.5">
+                <div className="grid grid-cols-2 gap-2 flex-1">
+                  <NumInput
+                    label="W"
+                    value={el.width ?? ((el.radius ?? 0) * 2)}
+                    onChange={handleWidthChange}
+                    min={1}
+                  />
+                  <NumInput
+                    label="H"
+                    value={el.height ?? ((el.radius ?? 0) * 2)}
+                    onChange={handleHeightChange}
+                    min={1}
+                  />
+                </div>
+                <button
+                  type="button"
+                  className={`p-1.5 rounded-md transition-colors flex-shrink-0 ${linkedAspect ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-foreground hover:bg-accent'}`}
+                  onClick={() => setLinkedAspect(p => !p)}
+                  title={linkedAspect ? 'Unlink aspect ratio' : 'Link aspect ratio'}
+                >
+                  {linkedAspect ? <Link2 size={12} /> : <Unlink2 size={12} />}
+                </button>
+              </div>
+            )}
+
+            {/* Rotation + Opacity */}
+            <div className="grid grid-cols-2 gap-2">
+              <NumInput label="°" value={el.rotation ?? 0} onChange={v => update('rotation', v)} min={-360} max={360} />
+              <NumInput label="%" value={Math.round((el.opacity ?? 1) * 100)} onChange={v => update('opacity', v / 100)} min={0} max={100} />
+            </div>
+
+            {/* Corner radius for rectangles */}
+            {el.type === 'rectangle' && (
+              <NumInput
+                label="r"
+                value={el.cornerRadius ?? 0}
+                onChange={v => update('cornerRadius', v)}
+                min={0}
+                max={Math.min((el.width ?? 100) / 2, (el.height ?? 100) / 2)}
+              />
+            )}
+          </Section>
         )}
-      </div>
 
-      {/* Quick Actions */}
-      <div className="flex gap-2 px-4 py-2 border-b border-border">
-        <ToggleButton
-          active={isVisible}
-          onClick={handleToggleVisibility}
-          icon={isVisible ? Eye : EyeOff}
-          label={isVisible ? 'Visible' : 'Hidden'}
-        />
-        <ToggleButton
-          active={isLocked}
-          onClick={handleToggleLock}
-          icon={isLocked ? Lock : Unlock}
-          label={isLocked ? 'Locked' : 'Unlocked'}
-        />
-      </div>
+        {/* ── Fill ── */}
+        {isSingle && (
+          <Section title="Fill" defaultOpen>
+            {el.fill && (
+              <ColorPicker
+                color={el.fill}
+                onChange={v => update('fill', v)}
+                label="Fill"
+              />
+            )}
+            {el.opacity !== undefined && (
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider flex-shrink-0">Opacity</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={Math.round((el.opacity ?? 1) * 100)}
+                  onChange={e => update('opacity', e.target.value / 100)}
+                  className="zoom-slider flex-1"
+                />
+                <span className="text-xs font-mono text-muted-foreground w-8 text-right flex-shrink-0">
+                  {Math.round((el.opacity ?? 1) * 100)}%
+                </span>
+              </div>
+            )}
+          </Section>
+        )}
 
-      {/* Properties */}
-      <div className="flex-1 overflow-y-auto py-2">
-        <AnimatePresence mode="wait">
-          {/* Transform */}
-          <PropertyGroup title="Transform" icon={Move}>
-            <PropertyRow label="X Position">
-              <NumberInput
-                value={getCommonProperty('x')}
-                onChange={(v) => handleUpdate('x', v)}
-              />
-            </PropertyRow>
-            <PropertyRow label="Y Position">
-              <NumberInput
-                value={getCommonProperty('y')}
-                onChange={(v) => handleUpdate('y', v)}
-              />
-            </PropertyRow>
-            <PropertyRow label="Rotation">
-              <NumberInput
-                value={getCommonProperty('rotation')}
-                onChange={(v) => handleUpdate('rotation', v)}
-                suffix="°"
-              />
-            </PropertyRow>
-            <PropertyRow label="Opacity">
-              <NumberInput
-                value={Math.round((getCommonProperty('opacity') ?? 1) * 100)}
-                onChange={(v) => handleUpdate('opacity', Math.max(0, Math.min(100, v)) / 100)}
+        {/* ── Stroke ── */}
+        {isSingle && hasStroke && (
+          <Section title="Stroke" defaultOpen={false}>
+            <ColorPicker
+              color={el.stroke || '#6366F1'}
+              onChange={v => update('stroke', v)}
+              label="Stroke"
+            />
+            <NumInput
+              label="W"
+              value={el.strokeWidth ?? 2}
+              onChange={v => update('strokeWidth', v)}
+              min={0}
+              max={40}
+              step={0.5}
+              unit="px"
+            />
+          </Section>
+        )}
+
+        {/* ── Typography (text only) ── */}
+        {isSingle && isText && (
+          <Section title="Typography" defaultOpen>
+            {/* Font Family Selector */}
+            <div className="prop-input h-8 px-2 flex items-center">
+              <Type size={11} className="text-muted-foreground/50 mr-2 shrink-0" />
+              <select
+                value={el.fontFamily || 'Inter, sans-serif'}
+                onChange={(e) => update('fontFamily', e.target.value)}
+                className="w-full bg-transparent border-none text-[11px] text-foreground outline-none cursor-pointer font-medium appearance-none"
+                style={{ fontFamily: el.fontFamily }}
+              >
+                {FONT_FAMILIES.map(f => (
+                  <option key={f.value} value={f.value} className="bg-[hsl(var(--surface-elevated))] text-foreground font-sans">
+                    {f.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronRight size={10} className="text-muted-foreground/40 rotate-90 shrink-0 pointer-events-none" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 mt-1">
+              <NumInput label="Size" value={el.fontSize ?? 16} onChange={v => update('fontSize', v)} min={6} max={256} unit="px" />
+              <NumInput label="Space" value={el.letterSpacing ?? 0} onChange={v => update('letterSpacing', v)} min={-10} max={100} unit="em" />
+            </div>
+
+            {/* Font weight */}
+            <div className="flex gap-1">
+              {[
+                { val: 'normal', icon: Type, label: 'Normal' },
+                { val: 'bold',   icon: Bold, label: 'Bold' },
+                { val: 'italic', icon: Italic, label: 'Italic' },
+              ].map(({ val, icon: Icon, label }) => (
+                <button
+                  key={val}
+                  type="button"
+                  className={`flex-1 flex items-center justify-center h-8 rounded-md border transition-colors text-xs
+                    ${el.fontWeight === val || (val === 'italic' && el.fontStyle === 'italic')
+                      ? 'border-primary/50 bg-primary/10 text-primary'
+                      : 'border-border text-muted-foreground hover:bg-accent'
+                    }`}
+                  onClick={() => {
+                    if (val === 'italic') {
+                      update('fontStyle', el.fontStyle === 'italic' ? 'normal' : 'italic');
+                    } else {
+                      update('fontWeight', el.fontWeight === val ? 'normal' : val);
+                    }
+                  }}
+                  aria-label={label}
+                >
+                  <Icon size={13} />
+                </button>
+              ))}
+            </div>
+
+            {/* Align */}
+            <div className="flex gap-1">
+              {[
+                { val: 'left',    icon: AlignLeft,    label: 'Left' },
+                { val: 'center',  icon: AlignCenter,  label: 'Center' },
+                { val: 'right',   icon: AlignRight,   label: 'Right' },
+                { val: 'justify', icon: AlignJustify, label: 'Justify' },
+              ].map(({ val, icon: Icon, label }) => (
+                <button
+                  key={val}
+                  type="button"
+                  className={`flex-1 flex items-center justify-center h-8 rounded-md border transition-colors
+                    ${el.align === val
+                      ? 'border-primary/50 bg-primary/10 text-primary'
+                      : 'border-border text-muted-foreground hover:bg-accent'
+                    }`}
+                  onClick={() => update('align', val)}
+                  aria-label={label}
+                >
+                  <Icon size={13} />
+                </button>
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* ── Multi-select: shared opacity ── */}
+        {isMulti && (
+          <Section title="Appearance" defaultOpen>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider flex-shrink-0">Opacity</span>
+              <input
+                type="range"
                 min={0}
                 max={100}
-                suffix="%"
+                defaultValue={100}
+                onChange={e => updateMulti('opacity', e.target.value / 100)}
+                className="zoom-slider flex-1"
               />
-            </PropertyRow>
-          </PropertyGroup>
+            </div>
+          </Section>
+        )}
 
-          {/* Size */}
-          {(element?.type === 'rectangle' || multiSelection) && (
-            <PropertyGroup title="Size" icon={Maximize2}>
-              <PropertyRow label="Width">
-                <NumberInput
-                  value={getCommonProperty('width')}
-                  onChange={(v) => handleUpdate('width', Math.max(1, v))}
-                  min={1}
-                />
-              </PropertyRow>
-              <PropertyRow label="Height">
-                <NumberInput
-                  value={getCommonProperty('height')}
-                  onChange={(v) => handleUpdate('height', Math.max(1, v))}
-                  min={1}
-                />
-              </PropertyRow>
-              {element?.type === 'rectangle' && (
-                <PropertyRow label="Corner Radius">
-                  <NumberInput
-                    value={getCommonProperty('cornerRadius') || 0}
-                    onChange={(v) => handleUpdate('cornerRadius', Math.max(0, v))}
-                    min={0}
-                  />
-                </PropertyRow>
-              )}
-            </PropertyGroup>
-          )}
-
-          {/* Circle/Star/Polygon Size */}
-          {(element?.type === 'circle' || element?.type === 'star' || element?.type === 'polygon') && (
-            <PropertyGroup title="Size" icon={Maximize2}>
-              <PropertyRow label="Radius">
-                <NumberInput
-                  value={element?.radius}
-                  onChange={(v) => handleUpdate('radius', Math.max(1, v))}
-                  min={1}
-                />
-              </PropertyRow>
-              {element?.type === 'star' && (
-                <>
-                  <PropertyRow label="Points">
-                    <NumberInput
-                      value={element?.numPoints || 5}
-                      onChange={(v) => handleUpdate('numPoints', Math.max(3, v))}
-                      min={3}
-                    />
-                  </PropertyRow>
-                  <PropertyRow label="Inner Radius">
-                    <NumberInput
-                      value={element?.innerRadius || 20}
-                      onChange={(v) => handleUpdate('innerRadius', Math.max(1, v))}
-                      min={1}
-                    />
-                  </PropertyRow>
-                </>
-              )}
-              {element?.type === 'polygon' && (
-                <PropertyRow label="Sides">
-                  <NumberInput
-                    value={element?.sides || 6}
-                    onChange={(v) => handleUpdate('sides', Math.max(3, v))}
-                    min={3}
-                  />
-                </PropertyRow>
-              )}
-            </PropertyGroup>
-          )}
-
-          {/* Appearance */}
-          <PropertyGroup title="Appearance" icon={Palette}>
-            <PropertyRow label="Fill">
-              <ColorInput
-                value={getCommonProperty('fill')}
-                onChange={(v) => handleUpdate('fill', v)}
-              />
-            </PropertyRow>
-            <PropertyRow label="Stroke">
-              <ColorInput
-                value={getCommonProperty('stroke')}
-                onChange={(v) => handleUpdate('stroke', v)}
-                showPresets={false}
-              />
-            </PropertyRow>
-            <PropertyRow label="Stroke Width">
-              <NumberInput
-                value={getCommonProperty('strokeWidth') || 0}
-                onChange={(v) => handleUpdate('strokeWidth', Math.max(0, v))}
-                min={0}
-              />
-            </PropertyRow>
-            {element?.type === 'line' && (
-              <PropertyRow label="Dash">
-                <NumberInput
-                  value={(getCommonProperty('dash') || [0, 0])[0]}
-                  onChange={(v) => handleUpdate('dash', v > 0 ? [v, v] : null)}
-                  min={0}
-                />
-              </PropertyRow>
-            )}
-          </PropertyGroup>
-
-          {/* Text Properties */}
-          {element?.type === 'text' && (
-            <PropertyGroup title="Typography" icon={Type}>
-              <PropertyRow label="Content">
-                <textarea
-                  value={element.text}
-                  onChange={(e) => handleUpdate('text', e.target.value)}
-                  className="w-32 px-2 py-1.5 bg-muted border border-border rounded-md text-sm text-foreground focus:outline-none focus:border-indigo-500 resize-none"
-                  rows={2}
-                />
-              </PropertyRow>
-              <PropertyRow label="Font Size">
-                <NumberInput
-                  value={element.fontSize}
-                  onChange={(v) => handleUpdate('fontSize', Math.max(8, v))}
-                  min={8}
-                />
-              </PropertyRow>
-              <PropertyRow label="Font Weight">
-                <select
-                  value={element.fontWeight || 'normal'}
-                  onChange={(e) => handleUpdate('fontWeight', e.target.value)}
-                  className="w-24 px-2 py-1.5 bg-muted border border-border rounded-md text-sm text-foreground focus:outline-none focus:border-indigo-500"
+        {/* ── Arrange ── */}
+        {isSingle && (
+          <Section title="Arrange" defaultOpen={false}>
+            <div className="grid grid-cols-2 gap-1.5">
+              {[
+                { label: 'Visible', key: 'visible', val: el.visible !== false },
+                { label: 'Locked', key: 'locked', val: el.locked === true },
+              ].map(({ label: lbl, key, val }) => (
+                <button
+                  key={key}
+                  type="button"
+                  className={`h-8 rounded-md border text-xs transition-colors flex items-center justify-center gap-1.5
+                    ${val ? 'border-primary/50 bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:bg-accent'}`}
+                  onClick={() => update(key, !val)}
                 >
-                  <option value="normal">Normal</option>
-                  <option value="bold">Bold</option>
-                  <option value="lighter">Light</option>
-                </select>
-              </PropertyRow>
-              <PropertyRow label="Line Height">
-                <NumberInput
-                  value={Math.round((element.lineHeight || 1.2) * 100)}
-                  onChange={(v) => handleUpdate('lineHeight', v / 100)}
-                  min={50}
-                  max={300}
-                  suffix="%"
-                />
-              </PropertyRow>
-            </PropertyGroup>
-          )}
-
-          {/* Arrow Properties */}
-          {element?.type === 'arrow' && (
-            <PropertyGroup title="Arrow" icon={Sliders}>
-              <PropertyRow label="Pointer Length">
-                <NumberInput
-                  value={element.pointerLength || 10}
-                  onChange={(v) => handleUpdate('pointerLength', Math.max(5, v))}
-                  min={5}
-                />
-              </PropertyRow>
-              <PropertyRow label="Pointer Width">
-                <NumberInput
-                  value={element.pointerWidth || 10}
-                  onChange={(v) => handleUpdate('pointerWidth', Math.max(5, v))}
-                  min={5}
-                />
-              </PropertyRow>
-            </PropertyGroup>
-          )}
-
-          {/* Layer Info */}
-          {singleSelection && (
-            <PropertyGroup title="Layer Info" icon={Hash} defaultOpen={false}>
-              <PropertyRow label="ID">
-                <span className="text-xs text-muted-foreground/50 font-mono truncate max-w-[140px]">
-                  {element.id}
-                </span>
-              </PropertyRow>
-              <PropertyRow label="Type">
-                <span className="text-xs text-muted-foreground/50 capitalize">
-                  {element.type}
-                </span>
-              </PropertyRow>
-              <PropertyRow label="Created">
-                <span className="text-xs text-muted-foreground/50">
-                  {new Date(element.createdAt).toLocaleString()}
-                </span>
-              </PropertyRow>
-              {element.updatedAt && (
-                <PropertyRow label="Modified">
-                  <span className="text-xs text-muted-foreground/50">
-                    {new Date(element.updatedAt).toLocaleString()}
-                  </span>
-                </PropertyRow>
-              )}
-            </PropertyGroup>
-          )}
-        </AnimatePresence>
+                  {key === 'visible' ? <Eye size={12} /> : <Layers size={12} />}
+                  {lbl}
+                </button>
+              ))}
+            </div>
+          </Section>
+        )}
       </div>
-    </motion.div>
+    </motion.aside>
+  );
+};
+
+/* ─── Header ─── */
+const titleOf = (type) => ({
+  rectangle: 'Rectangle',
+  circle: 'Circle',
+  text: 'Text',
+  line: 'Line',
+  arrow: 'Arrow',
+  star: 'Star',
+  polygon: 'Polygon',
+})[type] || 'Element';
+
+const PanelHeader = ({ label, onToggle }) => (
+  <div className="flex items-center justify-between h-10 px-3 border-b border-border flex-shrink-0">
+    <span className="text-xs font-semibold text-foreground truncate">
+      {label || 'Properties'}
+    </span>
+    <button
+      type="button"
+      className="tool-btn !w-7 !h-7 !rounded-md opacity-40 hover:opacity-100 flex-shrink-0"
+      onClick={onToggle}
+      aria-label="Collapse panel"
+    >
+      <PanelRightClose size={14} />
+    </button>
+  </div>
+);
+
+/* ─── Wrapper with collapse ─── */
+const PropertiesPanelWrapper = ({ collapsed, onToggle }) => {
+  const { selectedIds } = useCanvasStore();
+
+  if (collapsed) return null;
+
+  return (
+    <AnimatePresence initial={false}>
+      <PropertiesPanel collapsed={collapsed} onToggle={onToggle} />
+    </AnimatePresence>
   );
 };
 

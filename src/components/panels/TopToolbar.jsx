@@ -1,191 +1,336 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  MousePointer2,
-  Square,
-  Circle,
-  Type,
-  Hand,
-  Minus,
-  ArrowRight,
-  Star,
-  Hexagon,
-  ZoomIn,
-  ZoomOut,
-  Grid3X3,
-  Magnet,
-  Undo2,
-  Redo2,
-  Download,
-  Upload,
-  Trash2,
-  FilePlus,
-  ChevronDown,
-  Settings,
-  Layers,
-  Target,
-  Moon,
-  Sun,
-  Palette
+  MousePointer2, Square, Circle, Type, Minus, ArrowRight,
+  Star, Hexagon, Hand, Undo2, Redo2,
+  Sun, Moon, Contrast, ZoomIn, ZoomOut,
+  ChevronDown, Download, Upload, Trash2, Grid3X3,
+  Magnet, ScanLine, Keyboard, PanelLeftOpen, PanelRightOpen,
+  FileText, Eye, ExternalLink, Eraser,
 } from 'lucide-react';
 import { useCanvasStore } from '@/store/useCanvasStore';
 import { useTheme } from '@/hooks/useTheme';
-import { TOOLS, TOOL_CONFIG, COLORS } from '@/constants';
-import Portal from '@/components/ui/Portal';
+import { TOOLS, CANVAS } from '@/constants';
+import { ToolButton } from '@/components/ui/Tooltip';
 
-const ToolButton = ({ tool, activeTool, onClick, icon: Icon, label, shortcut }) => (
-  <motion.button
-    whileHover={{ scale: 1.05 }}
-    whileTap={{ scale: 0.95 }}
-    onClick={() => onClick(tool)}
-    className={`
-      relative flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200
-      ${activeTool === tool
-        ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30'
-        : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-      }
-    `}
-    title={`${label} (${shortcut})`}
-    aria-label={label}
-    aria-pressed={activeTool === tool}
-    aria-keyshortcuts={shortcut}
-  >
-    <Icon size={18} aria-hidden="true" />
-    <span className="text-xs font-medium hidden lg:block">{label}</span>
-  </motion.button>
+/* ─── Logo ─── */
+const Logo = () => (
+  <div className="flex items-center gap-2 select-none">
+    <div className="relative w-7 h-7">
+      <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary to-violet-500 opacity-90" />
+      <div className="absolute inset-[3px] rounded-md bg-background/30 flex items-center justify-center">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <rect x="1" y="1" width="5" height="5" rx="1" fill="white" opacity="0.9" />
+          <rect x="8" y="1" width="5" height="5" rx="1" fill="white" opacity="0.6" />
+          <rect x="1" y="8" width="5" height="5" rx="1" fill="white" opacity="0.6" />
+          <rect x="8" y="8" width="5" height="5" rx="1" fill="white" opacity="0.9" />
+        </svg>
+      </div>
+    </div>
+    <span className="text-[13px] font-semibold text-foreground hidden sm:block tracking-tight">
+      Canvas<span className="text-primary">Flow</span>
+    </span>
+  </div>
 );
 
-const ActionButton = ({ onClick, icon: Icon, label, disabled, shortcut, variant = 'default' }) => {
-  const baseClasses = 'flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200';
-  const variantClasses = {
-    default: disabled
-      ? 'bg-muted/50 text-muted-foreground/50 cursor-not-allowed'
-      : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground',
-    danger: disabled
-      ? 'bg-red-500/10 text-red-600/50 cursor-not-allowed'
-      : 'bg-red-500/10 text-red-400 hover:bg-red-500/20',
-    primary: 'bg-indigo-500 text-white hover:bg-indigo-600',
-  };
+/* ─── Tool groups ─── */
+const TOOL_GROUPS = [
+  {
+    id: 'select',
+    tools: [
+      { id: TOOLS.SELECT, icon: MousePointer2, label: 'Select', shortcut: 'V' },
+      { id: TOOLS.PAN,    icon: Hand,          label: 'Pan',    shortcut: 'H' },
+      { id: TOOLS.ERASER, icon: Eraser,        label: 'Eraser', shortcut: 'E' },
+    ],
+  },
+  {
+    id: 'shapes',
+    tools: [
+      { id: TOOLS.RECTANGLE, icon: Square,       label: 'Rectangle', shortcut: 'R' },
+      { id: TOOLS.CIRCLE,    icon: Circle,       label: 'Circle',    shortcut: 'C' },
+      { id: TOOLS.STAR,      icon: Star,         label: 'Star',      shortcut: 'S' },
+      { id: TOOLS.POLYGON,   icon: Hexagon,      label: 'Polygon',   shortcut: 'P' },
+    ],
+  },
+  {
+    id: 'connectors',
+    tools: [
+      { id: TOOLS.LINE,  icon: Minus,      label: 'Line',  shortcut: 'L' },
+      { id: TOOLS.ARROW, icon: ArrowRight, label: 'Arrow', shortcut: 'A' },
+    ],
+  },
+  {
+    id: 'text',
+    tools: [
+      { id: TOOLS.TEXT, icon: Type, label: 'Text', shortcut: 'T' },
+    ],
+  },
+];
+
+/* ─── Zoom Popover ─── */
+const ZOOM_PRESETS = [
+  { label: 'Fit to Screen', value: null },
+  { label: '25%',  value: 0.25 },
+  { label: '50%',  value: 0.50 },
+  { label: '75%',  value: 0.75 },
+  { label: '100%', value: 1.00 },
+  { label: '150%', value: 1.50 },
+  { label: '200%', value: 2.00 },
+  { label: '400%', value: 4.00 },
+];
+
+const ZoomControl = ({ zoom, onZoomIn, onZoomOut, onSetZoom, onFitScreen }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const pct = Math.round(zoom * 100);
+
+  useEffect(() => {
+    const handler = (e) => { if (!ref.current?.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   return (
+    <div className="relative flex items-center gap-0.5" ref={ref}>
+      <button
+        type="button"
+        className="tool-btn !w-7 !h-7 !rounded-md"
+        onClick={onZoomOut}
+        aria-label="Zoom out"
+      >
+        <ZoomOut size={14} />
+      </button>
+
+      <button
+        type="button"
+        className="flex items-center gap-1 px-2.5 h-7 rounded-md text-xs font-mono font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors select-none"
+        onClick={() => setOpen((p) => !p)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        {pct}%
+        <ChevronDown size={10} className={`transition-transform duration-150 ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      <button
+        type="button"
+        className="tool-btn !w-7 !h-7 !rounded-md"
+        onClick={onZoomIn}
+        aria-label="Zoom in"
+      >
+        <ZoomIn size={14} />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.95 }}
+            transition={{ duration: 0.12, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute top-full mt-2 right-0 z-50 glass rounded-xl shadow-2xl shadow-black/40 p-1 min-w-[140px]"
+          >
+            {ZOOM_PRESETS.map(({ label, value }) => (
+              <button
+                key={label}
+                type="button"
+                className={`w-full text-left px-3 py-1.5 rounded-lg text-xs hover:bg-accent transition-colors ${value === zoom ? 'text-primary font-semibold' : 'text-muted-foreground'}`}
+                onClick={() => {
+                  if (value === null) { onFitScreen(); } else { onSetZoom(value); }
+                  setOpen(false);
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+/* ─── Theme Toggle ─── */
+const THEME_META = {
+  dark:          { icon: Moon,     label: 'Dark',            next: 'light' },
+  light:         { icon: Sun,      label: 'Light',           next: 'high-contrast' },
+  'high-contrast':{ icon: Contrast, label: 'High Contrast',  next: 'dark' },
+};
+
+const ThemeToggle = ({ theme, setTheme }) => {
+  const meta = THEME_META[theme];
+  const Icon = meta.icon;
+  return (
     <motion.button
-      whileHover={!disabled ? { scale: 1.05 } : {}}
-      whileTap={!disabled ? { scale: 0.95 } : {}}
-      onClick={onClick}
-      disabled={disabled}
-      className={`${baseClasses} ${variantClasses[variant]}`}
-      title={`${label} (${shortcut})`}
-      aria-label={label}
-      aria-disabled={disabled}
-      aria-keyshortcuts={shortcut}
+      type="button"
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.92 }}
+      className="tool-btn"
+      onClick={() => setTheme(meta.next)}
+      aria-label={`Switch to ${THEME_META[meta.next].label} theme`}
+      title={`${meta.label} mode — click to switch`}
     >
-      <Icon size={16} aria-hidden="true" />
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={theme}
+          initial={{ rotate: -30, opacity: 0, scale: 0.7 }}
+          animate={{ rotate: 0,   opacity: 1, scale: 1 }}
+          exit={{   rotate: 30,  opacity: 0, scale: 0.7 }}
+          transition={{ duration: 0.2 }}
+        >
+          <Icon size={17} strokeWidth={1.8} />
+        </motion.div>
+      </AnimatePresence>
     </motion.button>
   );
 };
 
-const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
-  const [showFileMenu, setShowFileMenu] = useState(false);
-  const [showViewMenu, setShowViewMenu] = useState(false);
-  const [showThemeMenu, setShowThemeMenu] = useState(false);
-  const [menuPositions, setMenuPositions] = useState({});
+/* ─── File Menu ─── */
+const FileMenu = ({ onExport, onImport, onClear, onToggleShortcuts }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
 
-  const fileMenuRef = useRef(null);
-  const viewMenuRef = useRef(null);
-  const themeMenuRef = useRef(null);
+  useEffect(() => {
+    const handler = (e) => { if (!ref.current?.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const items = [
+    { icon: Upload,   label: 'Import JSON',       shortcut: '',        action: onImport },
+    { icon: Download, label: 'Export JSON',        shortcut: '',        action: onExport },
+    { type: 'sep' },
+    { icon: Trash2,   label: 'Clear Canvas',       shortcut: '',        action: onClear,          danger: true },
+    { type: 'sep' },
+    { icon: Keyboard, label: 'Keyboard Shortcuts', shortcut: '?',       action: onToggleShortcuts },
+  ];
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        className="flex items-center gap-1 px-2.5 h-7 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+        onClick={() => setOpen((p) => !p)}
+      >
+        <FileText size={13} />
+        <span className="hidden sm:block">File</span>
+        <ChevronDown size={10} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.95 }}
+            transition={{ duration: 0.12, ease: [0.16, 1, 0.3, 1] }}
+            className="context-menu absolute top-full mt-2 left-0 z-50"
+            style={{ minWidth: 200 }}
+          >
+            {items.map((item, i) =>
+              item.type === 'sep'
+                ? <div key={i} className="context-menu-separator" />
+                : (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`context-menu-item w-full ${item.danger ? 'destructive' : ''}`}
+                    onClick={() => { item.action?.(); setOpen(false); }}
+                  >
+                    <item.icon size={14} />
+                    <span className="flex-1 text-left">{item.label}</span>
+                    {item.shortcut && <span className="shortcut">{item.shortcut}</span>}
+                  </button>
+                )
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+/* ─── View Menu ─── */
+const ViewMenu = ({ showGrid, snapToGrid, showSmartGuides, onToggleGrid, onToggleSnap, onToggleGuides }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (!ref.current?.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const items = [
+    { icon: Grid3X3,  label: 'Show Grid',         shortcut: 'G', active: showGrid,        action: onToggleGrid },
+    { icon: Magnet,   label: 'Snap to Grid',       shortcut: '',  active: snapToGrid,       action: onToggleSnap },
+    { icon: ScanLine, label: 'Smart Guides',        shortcut: 'U', active: showSmartGuides, action: onToggleGuides },
+  ];
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        className="flex items-center gap-1 px-2.5 h-7 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+        onClick={() => setOpen((p) => !p)}
+      >
+        <Eye size={13} />
+        <span className="hidden sm:block">View</span>
+        <ChevronDown size={10} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.95 }}
+            transition={{ duration: 0.12, ease: [0.16, 1, 0.3, 1] }}
+            className="context-menu absolute top-full mt-2 left-0 z-50"
+            style={{ minWidth: 200 }}
+          >
+            {items.map((item, i) => (
+              <button
+                key={i}
+                type="button"
+                className="context-menu-item w-full"
+                onClick={() => { item.action?.(); setOpen(false); }}
+              >
+                <item.icon size={14} className={item.active ? 'text-primary' : ''} />
+                <span className={`flex-1 text-left ${item.active ? 'text-foreground font-medium' : ''}`}>{item.label}</span>
+                {item.active && (
+                  <span className="w-2 h-2 rounded-full bg-primary ml-1 flex-shrink-0" />
+                )}
+                {item.shortcut && <span className="shortcut">{item.shortcut}</span>}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+/* ─── Main TopToolbar ─── */
+const TopToolbar = ({
+  onToggleShortcuts,
+  leftCollapsed,
+  rightCollapsed,
+  onToggleLeft,
+  onToggleRight,
+}) => {
+  const {
+    activeTool, setActiveTool,
+    zoom, zoomIn, zoomOut, setZoom, centerCanvas,
+    undo, redo, canUndo, canRedo,
+    exportToJSON, importFromJSON, clearCanvas,
+    showGrid, snapToGrid, showSmartGuides,
+    toggleGrid, toggleSnapToGrid, toggleSmartGuides,
+  } = useCanvasStore();
 
   const { theme, setTheme } = useTheme();
 
-  // Close menus when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (fileMenuRef.current && !fileMenuRef.current.contains(e.target)) {
-        setShowFileMenu(false);
-      }
-      if (viewMenuRef.current && !viewMenuRef.current.contains(e.target)) {
-        setShowViewMenu(false);
-      }
-      if (themeMenuRef.current && !themeMenuRef.current.contains(e.target)) {
-        setShowThemeMenu(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Toggle functions
-  const toggleFileMenu = () => {
-    setShowFileMenu(prev => !prev);
-    setShowViewMenu(false);
-    setShowThemeMenu(false);
-  };
-
-  const toggleViewMenu = () => {
-    setShowViewMenu(prev => !prev);
-    setShowFileMenu(false);
-    setShowThemeMenu(false);
-  };
-
-  const toggleThemeMenu = () => {
-    setShowThemeMenu(prev => !prev);
-    setShowFileMenu(false);
-    setShowViewMenu(false);
-  };
-
-  // Calculate menu positions when opened
-  useEffect(() => {
-    if (showFileMenu && fileMenuRef.current) {
-      const rect = fileMenuRef.current.getBoundingClientRect();
-      setMenuPositions(prev => ({ ...prev, file: { top: rect.bottom, left: rect.left } }));
-    }
-    if (showViewMenu && viewMenuRef.current) {
-      const rect = viewMenuRef.current.getBoundingClientRect();
-      setMenuPositions(prev => ({ ...prev, view: { top: rect.bottom, left: rect.left } }));
-    }
-    if (showThemeMenu && themeMenuRef.current) {
-      const rect = themeMenuRef.current.getBoundingClientRect();
-      setMenuPositions(prev => ({ ...prev, theme: { top: rect.bottom, right: window.innerWidth - rect.right } }));
-    }
-  }, [showFileMenu, showViewMenu, showThemeMenu]);
-  
-  const {
-    activeTool,
-    zoom,
-    showGrid,
-    snapToGrid,
-    showSmartGuides,
-    setActiveTool,
-    zoomIn,
-    zoomOut,
-    resetZoom,
-    centerCanvas,
-    toggleGrid,
-    toggleSnapToGrid,
-    toggleSmartGuides,
-    undo,
-    redo,
-    canUndo,
-    canRedo,
-    clearCanvas,
-    exportToJSON,
-    importFromJSON,
-    initializeWithSamples,
-  } = useCanvasStore();
-
-  const tools = [
-    { tool: TOOLS.SELECT, icon: MousePointer2, label: 'Select', shortcut: 'V' },
-    { tool: TOOLS.RECTANGLE, icon: Square, label: 'Rectangle', shortcut: 'R' },
-    { tool: TOOLS.CIRCLE, icon: Circle, label: 'Circle', shortcut: 'C' },
-    { tool: TOOLS.TEXT, icon: Type, label: 'Text', shortcut: 'T' },
-    { tool: TOOLS.LINE, icon: Minus, label: 'Line', shortcut: 'L' },
-    { tool: TOOLS.ARROW, icon: ArrowRight, label: 'Arrow', shortcut: 'A' },
-    { tool: TOOLS.STAR, icon: Star, label: 'Star', shortcut: 'S' },
-    { tool: TOOLS.POLYGON, icon: Hexagon, label: 'Polygon', shortcut: 'P' },
-    { tool: TOOLS.PAN, icon: Hand, label: 'Pan', shortcut: 'H' },
-  ];
-
-  const handleExport = () => {
+  const handleExport = useCallback(() => {
     const json = exportToJSON();
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -194,309 +339,143 @@ const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
     a.download = `canvasflow-${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    setShowFileMenu(false);
-  };
+  }, [exportToJSON]);
 
-  const handleImport = () => {
+  const handleImport = useCallback(() => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
     input.onchange = (e) => {
       const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          importFromJSON(event.target.result);
-        };
-        reader.readAsText(file);
-      }
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => importFromJSON(ev.target.result);
+      reader.readAsText(file);
     };
     input.click();
-    setShowFileMenu(false);
-  };
+  }, [importFromJSON]);
 
-  const handleLoadSamples = () => {
-    onConfirmLoadSamples();
-    setShowFileMenu(false);
-  };
-
-  const handleClear = () => {
-    onConfirmClear();
-    setShowFileMenu(false);
-  };
+  const isUndoDisabled = !canUndo();
+  const isRedoDisabled = !canRedo();
 
   return (
-    <motion.div
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      className="flex items-center justify-between px-4 py-3 bg-card/95 backdrop-blur-sm border-b border-border"
-      role="toolbar"
-      aria-label="CanvasFlow main toolbar"
-    >
-      {/* Left - Logo & File Menu */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 mr-4">
-          <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/30">
-            <Layers className="w-4 h-4 text-white" aria-hidden="true" />
-          </div>
-          <span className="text-lg font-semibold text-foreground">CanvasFlow</span>
-        </div>
+    <header className="flex items-center h-12 px-3 gap-2 border-b border-border bg-background/95 backdrop-blur-sm flex-shrink-0 z-40">
+      {/* ── Left: Logo + Menus ── */}
+      <div className="flex items-center gap-1 mr-1">
+        {/* Sidebar toggle left */}
+        <ToolButton
+          icon={PanelLeftOpen}
+          label={leftCollapsed ? 'Show Layers' : 'Hide Layers'}
+          shortcut=""
+          tooltipSide="bottom"
+          onClick={onToggleLeft}
+          className={`!w-7 !h-7 mr-1 ${leftCollapsed ? '' : 'active'}`}
+        />
+        <Logo />
+      </div>
 
-        {/* File Menu */}
-        <div className="relative">
-          <button
-            ref={fileMenuRef}
-            onClick={toggleFileMenu}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
-            aria-label="File menu"
-            aria-expanded={showFileMenu}
-            aria-haspopup="menu"
-          >
-            File
-            <ChevronDown size={14} aria-hidden="true" />
-          </button>
-          <AnimatePresence>
-            {showFileMenu && menuPositions.file && (
-              <Portal>
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  style={{ position: 'fixed', top: menuPositions.file.top, left: menuPositions.file.left }}
-                  className="w-48 bg-popover border border-border rounded-lg shadow-xl z-[9999] py-1 text-popover-foreground"
-                  role="menu"
-                >
-                <button
-                  onClick={handleExport}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-foreground/80 hover:bg-accent hover:text-accent-foreground transition-colors"
-                  role="menuitem"
-                >
-                  <Download size={16} aria-hidden="true" />
-                  Export JSON
-                </button>
-                <button
-                  onClick={handleImport}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-foreground/80 hover:bg-accent hover:text-accent-foreground transition-colors"
-                  role="menuitem"
-                >
-                  <Upload size={16} aria-hidden="true" />
-                  Import JSON
-                </button>
-                <button
-                  onClick={handleLoadSamples}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-foreground/80 hover:bg-accent hover:text-accent-foreground transition-colors"
-                  role="menuitem"
-                >
-                  <FilePlus size={16} aria-hidden="true" />
-                  Load Sample Data
-                </button>
-                <div className="border-t border-border my-1" role="separator" />
-                <button
-                  onClick={handleClear}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
-                  role="menuitem"
-                >
-                  <Trash2 size={16} aria-hidden="true" />
-                  Clear Canvas
-                </button>
-              </motion.div>
-            </Portal>
-            )}
-          </AnimatePresence>
-        </div>
+      <div className="flex items-center gap-0.5">
+        <FileMenu
+          onExport={handleExport}
+          onImport={handleImport}
+          onClear={clearCanvas}
+          onToggleShortcuts={onToggleShortcuts}
+        />
+        <ViewMenu
+          showGrid={showGrid}
+          snapToGrid={snapToGrid}
+          showSmartGuides={showSmartGuides}
+          onToggleGrid={toggleGrid}
+          onToggleSnap={toggleSnapToGrid}
+          onToggleGuides={toggleSmartGuides}
+        />
+      </div>
 
-        {/* View Menu */}
-        <div className="relative">
-          <button
-            ref={viewMenuRef}
-            onClick={toggleViewMenu}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
-            aria-label="View menu"
-            aria-expanded={showViewMenu}
-            aria-haspopup="menu"
-          >
-            View
-            <ChevronDown size={14} aria-hidden="true" />
-          </button>
-          <AnimatePresence>
-            {showViewMenu && menuPositions.view && (
-              <Portal>
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  style={{ position: 'fixed', top: menuPositions.view.top, left: menuPositions.view.left }}
-                  className="w-48 bg-popover border border-border rounded-lg shadow-xl z-[9999] py-1 text-popover-foreground"
-                  role="menu"
-                >
-                <button
-                  onClick={() => { toggleGrid(); setShowViewMenu(false); }}
-                  className="w-full flex items-center justify-between px-4 py-2 text-sm text-foreground/80 hover:bg-accent hover:text-accent-foreground transition-colors"
-                  role="menuitem"
-                >
-                  <span className="flex items-center gap-3">
-                    <Grid3X3 size={16} aria-hidden="true" />
-                    Show Grid
-                  </span>
-                  {showGrid && <span className="text-indigo-400" aria-label="enabled">✓</span>}
-                </button>
-                <button
-                  onClick={() => { toggleSnapToGrid(); setShowViewMenu(false); }}
-                  className="w-full flex items-center justify-between px-4 py-2 text-sm text-foreground/80 hover:bg-accent hover:text-accent-foreground transition-colors"
-                  role="menuitem"
-                >
-                  <span className="flex items-center gap-3">
-                    <Magnet size={16} aria-hidden="true" />
-                    Snap to Grid
-                  </span>
-                  {snapToGrid && <span className="text-indigo-400" aria-label="enabled">✓</span>}
-                </button>
-                <button
-                  onClick={() => { toggleSmartGuides(); setShowViewMenu(false); }}
-                  className="w-full flex items-center justify-between px-4 py-2 text-sm text-foreground/80 hover:bg-accent hover:text-accent-foreground transition-colors"
-                  role="menuitem"
-                >
-                  <span className="flex items-center gap-3">
-                    <Target size={16} aria-hidden="true" />
-                    Smart Guides
-                  </span>
-                  {showSmartGuides && <span className="text-indigo-400" aria-label="enabled">✓</span>}
-                </button>
-                <div className="border-t border-border my-1" role="separator" />
-                <button
-                  onClick={() => { centerCanvas(); setShowViewMenu(false); }}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-foreground/80 hover:bg-accent hover:text-accent-foreground transition-colors"
-                  role="menuitem"
-                >
-                  <Settings size={16} aria-hidden="true" />
-                  Center Canvas
-                </button>
-              </motion.div>
-            </Portal>
-            )}
-          </AnimatePresence>
+      {/* ── Center: Tool Palette (Figma pill style) ── */}
+      <div className="flex-1 flex items-center justify-center">
+        <div className="flex items-center gap-0.5 px-1.5 py-1 bg-secondary/50 rounded-xl border border-border/50">
+          {TOOL_GROUPS.map((group, gi) => (
+            <React.Fragment key={group.id}>
+              {gi > 0 && <div className="toolbar-separator mx-1" />}
+              {group.tools.map((tool) => {
+                const isActive = activeTool === tool.id;
+                return (
+                  <motion.button
+                    key={tool.id}
+                    type="button"
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.92 }}
+                    className={`tool-btn relative ${isActive ? 'active' : ''}`}
+                    onClick={() => setActiveTool(tool.id)}
+                    aria-label={tool.label}
+                    aria-pressed={isActive}
+                    title={`${tool.label} (${tool.shortcut})`}
+                  >
+                    <tool.icon size={17} strokeWidth={isActive ? 2.2 : 1.7} />
+                    {isActive && (
+                      <motion.div
+                        layoutId="tool-active-bg"
+                        className="absolute inset-0 rounded-lg bg-primary/15 ring-1 ring-primary/30"
+                        style={{ zIndex: -1 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                      />
+                    )}
+                  </motion.button>
+                );
+              })}
+            </React.Fragment>
+          ))}
         </div>
       </div>
 
-      {/* Center - Tools */}
-      <div className="flex items-center gap-1 p-1.5 bg-muted/50 rounded-xl">
-        {tools.map(({ tool, icon, label, shortcut }) => (
+      {/* ── Right: History + Zoom + Theme + Sidebar ── */}
+      <div className="flex items-center gap-1">
+        {/* Undo / Redo */}
+        <div className="flex items-center gap-0.5">
           <ToolButton
-            key={tool}
-            tool={tool}
-            activeTool={activeTool}
-            onClick={setActiveTool}
-            icon={icon}
-            label={label}
-            shortcut={shortcut}
-          />
-        ))}
-      </div>
-
-      {/* Right - Zoom & Actions */}
-      <div className="flex items-center gap-3">
-        {/* Zoom Controls */}
-        <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1" role="group" aria-label="Zoom controls">
-          <ActionButton
-            onClick={zoomOut}
-            icon={ZoomOut}
-            label="Zoom Out"
-            shortcut="Ctrl+-"
-          />
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={resetZoom}
-            className="px-3 py-2 text-muted-foreground hover:text-foreground transition-colors min-w-[70px] text-center"
-            aria-label={`Reset zoom to 100%, current zoom is ${Math.round(zoom * 100)}%`}
-          >
-            <span className="text-sm font-medium tabular-nums">
-              {Math.round(zoom * 100)}%
-            </span>
-          </motion.button>
-          <ActionButton
-            onClick={zoomIn}
-            icon={ZoomIn}
-            label="Zoom In"
-            shortcut="Ctrl++"
-          />
-        </div>
-
-        <div className="w-px h-8 bg-border" role="separator" aria-hidden="true" />
-        
-        {/* Theme Menu */}
-        <div className="relative">
-          <button
-            ref={themeMenuRef}
-            onClick={toggleThemeMenu}
-            className="flex items-center justify-center p-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-            title="Theme Settings"
-            aria-label="Theme settings"
-          >
-            {theme === 'light' ? <Sun size={18} /> : theme === 'high-contrast' ? <Palette size={18} /> : <Moon size={18} />}
-          </button>
-          <AnimatePresence>
-            {showThemeMenu && menuPositions.theme && (
-              <Portal>
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  style={{ position: 'fixed', top: menuPositions.theme.top, right: menuPositions.theme.right }}
-                  className="w-40 bg-popover border border-border rounded-lg shadow-xl z-[9999] py-1 text-popover-foreground"
-                  role="menu"
-                >
-                <button
-                  onClick={() => { setTheme('dark'); setShowThemeMenu(false); }}
-                  className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-colors ${theme === 'dark' ? 'text-indigo-400 bg-accent/50' : 'text-foreground/80 hover:bg-accent hover:text-accent-foreground'}`}
-                  role="menuitem"
-                >
-                  <span className="flex items-center gap-2"><Moon size={14} /> Dark</span>
-                  {theme === 'dark' && <span>✓</span>}
-                </button>
-                <button
-                  onClick={() => { setTheme('light'); setShowThemeMenu(false); }}
-                  className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-colors ${theme === 'light' ? 'text-indigo-400 bg-accent/50' : 'text-foreground/80 hover:bg-accent hover:text-accent-foreground'}`}
-                  role="menuitem"
-                >
-                  <span className="flex items-center gap-2"><Sun size={14} /> Light</span>
-                  {theme === 'light' && <span>✓</span>}
-                </button>
-                <button
-                  onClick={() => { setTheme('high-contrast'); setShowThemeMenu(false); }}
-                  className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-colors ${theme === 'high-contrast' ? 'text-indigo-400 bg-accent/50' : 'text-foreground/80 hover:bg-accent hover:text-accent-foreground'}`}
-                  role="menuitem"
-                >
-                  <span className="flex items-center gap-2"><Palette size={14} /> High Contrast</span>
-                  {theme === 'high-contrast' && <span>✓</span>}
-                </button>
-              </motion.div>
-            </Portal>
-            )}
-          </AnimatePresence>
-        </div>
-
-        <div className="w-px h-8 bg-border" role="separator" aria-hidden="true" />
-
-        {/* Undo/Redo */}
-        <div className="flex items-center gap-1" role="group" aria-label="History controls">
-          <ActionButton
-            onClick={undo}
             icon={Undo2}
             label="Undo"
-            disabled={!canUndo()}
             shortcut="Ctrl+Z"
+            disabled={isUndoDisabled}
+            onClick={undo}
           />
-          <ActionButton
-            onClick={redo}
+          <ToolButton
             icon={Redo2}
             label="Redo"
-            disabled={!canRedo()}
             shortcut="Ctrl+Y"
+            disabled={isRedoDisabled}
+            onClick={redo}
           />
         </div>
+
+        <div className="toolbar-separator" />
+
+        {/* Zoom */}
+        <ZoomControl
+          zoom={zoom}
+          onZoomIn={zoomIn}
+          onZoomOut={zoomOut}
+          onSetZoom={setZoom}
+          onFitScreen={centerCanvas}
+        />
+
+        <div className="toolbar-separator" />
+
+        {/* Theme */}
+        <ThemeToggle theme={theme} setTheme={setTheme} />
+
+        <div className="toolbar-separator" />
+
+        {/* Right sidebar toggle */}
+        <ToolButton
+          icon={PanelRightOpen}
+          label={rightCollapsed ? 'Show Properties' : 'Hide Properties'}
+          tooltipSide="bottom"
+          onClick={onToggleRight}
+          className={`!w-7 !h-7 ${rightCollapsed ? '' : 'active'}`}
+        />
       </div>
-    </motion.div>
+    </header>
   );
 };
 

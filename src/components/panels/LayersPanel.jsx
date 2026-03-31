@@ -1,304 +1,212 @@
-import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence, Reorder } from 'framer-motion';
+import React, { useState, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Layers,
-  Square,
-  Circle,
-  Type,
-  Minus,
-  ArrowRight,
-  Star,
-  Hexagon,
-  Eye,
-  EyeOff,
-  Lock,
-  Unlock,
-  Trash2,
-  Copy,
-  Search,
-  ChevronUp,
-  ChevronDown,
-  GripVertical,
-  X
+  Square, Circle, Type, Minus, ArrowRight, Star, Hexagon,
+  Eye, EyeOff, Lock, Unlock, Trash2, ChevronDown,
+  Plus, AlignJustify,
 } from 'lucide-react';
 import { useCanvasStore } from '@/store/useCanvasStore';
-import { COLORS } from '@/constants';
-import { VirtualList } from '@/components/ui/VirtualList';
+import { ToolButton } from '@/components/ui/Tooltip';
 
-const getElementIcon = (type) => {
-  switch (type) {
-    case 'rectangle': return Square;
-    case 'circle': return Circle;
-    case 'text': return Type;
-    case 'line': return Minus;
-    case 'arrow': return ArrowRight;
-    case 'star': return Star;
-    case 'polygon': return Hexagon;
-    default: return Square;
-  }
+/* ─── Element type metadata ─── */
+const TYPE_META = {
+  rectangle: { icon: Square,      color: 'bg-indigo-500',  label: 'Rectangle' },
+  circle:    { icon: Circle,      color: 'bg-cyan-500',    label: 'Circle' },
+  text:      { icon: Type,        color: 'bg-amber-500',   label: 'Text' },
+  line:      { icon: Minus,       color: 'bg-slate-400',   label: 'Line' },
+  arrow:     { icon: ArrowRight,  color: 'bg-purple-500',  label: 'Arrow' },
+  star:      { icon: Star,        color: 'bg-yellow-500',  label: 'Star' },
+  polygon:   { icon: Hexagon,     color: 'bg-emerald-500', label: 'Polygon' },
 };
 
-const LayerItem = ({ 
-  element, 
-  isSelected, 
-  onClick, 
-  onToggleVisibility, 
-  onToggleLock,
-  index,
-  total
-}) => {
-  const Icon = getElementIcon(element.type);
+/* ─── Layer Item ─── */
+const LayerItem = React.memo(({ element, isSelected, index, total }) => {
+  const { selectElement, updateElement, deleteElement } = useCanvasStore();
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [nameValue, setNameValue] = useState('');
+  const inputRef = useRef(null);
+
+  const meta = TYPE_META[element.type] || { icon: Square, color: 'bg-slate-500', label: 'Element' };
+  const Icon = meta.icon;
+  const displayName = element.name || `${meta.label}`;
   const isVisible = element.visible !== false;
   const isLocked = element.locked === true;
+
+  const handleClick = useCallback((e) => {
+    selectElement(element.id, e.shiftKey || e.ctrlKey || e.metaKey);
+  }, [element.id, selectElement]);
+
+  const handleDoubleClick = useCallback(() => {
+    setNameValue(displayName);
+    setIsRenaming(true);
+    setTimeout(() => inputRef.current?.select(), 50);
+  }, [displayName]);
+
+  const commitRename = useCallback(() => {
+    const trimmed = nameValue.trim();
+    if (trimmed && trimmed !== displayName) {
+      updateElement(element.id, { name: trimmed });
+    }
+    setIsRenaming(false);
+  }, [nameValue, displayName, element.id, updateElement]);
+
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === 'Enter') commitRename();
+    if (e.key === 'Escape') setIsRenaming(false);
+  }, [commitRename]);
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, x: -20 }}
+      initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      onClick={onClick}
-      className={`
-        group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all duration-200
-          ? 'bg-indigo-500/20 border border-indigo-500/50' 
-          : 'hover:bg-accent/50 border border-transparent'
-        }
-      `}
+      exit={{ opacity: 0, x: -8, height: 0 }}
+      transition={{ duration: 0.14 }}
+      className={`layer-item group ${isSelected ? 'selected' : ''} ${!isVisible ? 'opacity-50' : ''}`}
+      onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
     >
-      {/* Drag Handle */}
-      <GripVertical size={14} className="text-muted-foreground/50 cursor-grab active:cursor-grabbing" />
+      {/* Type dot */}
+      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${meta.color}`} />
 
       {/* Icon */}
-      <div 
-        className="w-6 h-6 rounded flex items-center justify-center"
-        style={{ backgroundColor: element.fill?.startsWith('#') ? element.fill : COLORS.surfaceSecondary }}
-      >
-        <Icon size={12} className="text-white/80" />
+      <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 text-muted-foreground">
+        <Icon size={13} strokeWidth={1.7} />
       </div>
 
       {/* Name */}
       <div className="flex-1 min-w-0">
-        <span className="text-sm text-foreground truncate block">
-          {element.type.charAt(0).toUpperCase() + element.type.slice(1)} {index + 1}
-        </span>
-        <span className="text-xs text-muted-foreground/70">
-          {Math.round(element.x)}, {Math.round(element.y)}
-        </span>
+        {isRenaming ? (
+          <input
+            ref={inputRef}
+            value={nameValue}
+            onChange={(e) => setNameValue(e.target.value)}
+            onBlur={commitRename}
+            onKeyDown={handleKeyDown}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full bg-background border border-primary/50 rounded px-1 py-0 text-xs text-foreground outline-none focus:ring-1 focus:ring-primary/40"
+          />
+        ) : (
+          <span className="text-xs text-muted-foreground group-hover:text-foreground truncate block layer-name">
+            {displayName}
+          </span>
+        )}
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      {/* Hover actions */}
+      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-100">
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleVisibility();
-          }}
-          className={`p-1.5 rounded hover:bg-accent transition-colors ${isVisible ? 'text-muted-foreground' : 'text-muted-foreground/50'}`}
-          title={isVisible ? 'Hide' : 'Show'}
+          type="button"
+          className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+          onClick={(e) => { e.stopPropagation(); updateElement(element.id, { visible: !isVisible }); }}
+          aria-label={isVisible ? 'Hide' : 'Show'}
         >
-          {isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
+          {isVisible ? <Eye size={12} /> : <EyeOff size={12} />}
         </button>
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleLock();
-          }}
-          className={`p-1.5 rounded hover:bg-accent transition-colors ${isLocked ? 'text-amber-400' : 'text-muted-foreground'}`}
-          title={isLocked ? 'Unlock' : 'Lock'}
+          type="button"
+          className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+          onClick={(e) => { e.stopPropagation(); updateElement(element.id, { locked: !isLocked }); }}
+          aria-label={isLocked ? 'Unlock' : 'Lock'}
         >
-          {isLocked ? <Lock size={14} /> : <Unlock size={14} />}
+          {isLocked ? <Lock size={12} /> : <Unlock size={12} />}
+        </button>
+        <button
+          type="button"
+          className="p-1 rounded hover:bg-red-500/10 text-muted-foreground hover:text-red-400 transition-colors"
+          onClick={(e) => { e.stopPropagation(); deleteElement(element.id); }}
+          aria-label="Delete element"
+        >
+          <Trash2 size={12} />
         </button>
       </div>
     </motion.div>
   );
-};
+});
+LayerItem.displayName = 'LayerItem';
 
-const LayersPanel = ({ isEmbedded = false }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showActions, setShowActions] = useState(false);
+/* ─── Layers Panel ─── */
+const LayersPanel = () => {
+  const { elements, selectedIds, selectAll, clearSelection, deleteSelected } = useCanvasStore();
+  const [sortOrder, setSortOrder] = useState('top-to-bottom'); // 'top-to-bottom' | 'bottom-to-top'
 
-  const {
-    elements,
-    selectedIds,
-    selectElement,
-    updateElement,
-    deleteSelected,
-    duplicateSelected,
-    bringToFront,
-    sendToBack,
-    bringForward,
-    sendBackward,
-  } = useCanvasStore();
-
-  // Filter elements based on search
-  const filteredElements = useMemo(() => {
-    if (!searchQuery) return elements;
-    return elements.filter(el =>
-      el.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (el.text && el.text.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
-  }, [elements, searchQuery]);
-
-  // Reverse for display (top layer first)
-  const displayElements = useMemo(() => [...filteredElements].reverse(), [filteredElements]);
-
-  const handleToggleVisibility = (id) => {
-    const element = elements.find((el) => el.id === id);
-    if (element) {
-      updateElement(id, { visible: element.visible === false });
-    }
-  };
-
-  const handleToggleLock = (id) => {
-    const element = elements.find((el) => el.id === id);
-    if (element) {
-      updateElement(id, { locked: element.locked !== true });
-    }
-  };
+  // Display in reverse order (top elements first)
+  const displayElements = sortOrder === 'top-to-bottom'
+    ? [...elements].reverse()
+    : elements;
 
   const hasSelection = selectedIds.length > 0;
 
   return (
-    <motion.div
-      initial={isEmbedded ? false : { x: -20, opacity: 0 }}
-      animate={isEmbedded ? false : { x: 0, opacity: 1 }}
-      className={`flex flex-col h-full bg-card/95 ${
-        !isEmbedded ? 'w-72 backdrop-blur-sm border-r border-border' : ''
-      }`}
-      role={isEmbedded ? 'region' : 'complementary'}
-      aria-label="Layers panel"
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <div className="flex items-center gap-2">
-          <Layers className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-          <span className="text-sm font-medium text-foreground">Layers</span>
-        </div>
-        <span className="text-xs text-muted-foreground/70" aria-live="polite">{elements.length} items</span>
-      </div>
-
-      {/* Search */}
-      <div className="px-4 py-2 border-b border-border">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-          <input
-            type="text"
-            placeholder="Search layers..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-8 py-2 bg-muted border border-border rounded-lg text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-indigo-500 transition-colors"
-            aria-label="Search layers"
-          />
-          {searchQuery && (
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between px-3 py-2 border-b border-border flex-shrink-0">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          {elements.length} {elements.length === 1 ? 'Layer' : 'Layers'}
+        </span>
+        <div className="flex items-center gap-0.5">
+          <button
+            type="button"
+            className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            onClick={() => setSortOrder(s => s === 'top-to-bottom' ? 'bottom-to-top' : 'top-to-bottom')}
+            title="Reverse sort order"
+          >
+            <AlignJustify size={12} />
+          </button>
+          {hasSelection && (
             <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              aria-label="Clear search"
+              type="button"
+              className="p-1 rounded text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors"
+              onClick={deleteSelected}
+              title="Delete selected"
             >
-              <X size={14} />
+              <Trash2 size={12} />
             </button>
           )}
         </div>
       </div>
 
-      {/* Layer List - Virtualized for performance */}
-      <div className="flex-1 overflow-hidden p-2">
-        {displayElements.length > 0 ? (
-          <VirtualList
-            items={displayElements}
-            itemHeight={48} // Height of each layer item
-            overscan={5} // Render 5 items above/below viewport
-            className="h-full"
-            renderItem={({ item, index }) => {
-              const originalIndex = elements.findIndex(el => el.id === item.id);
-              return (
-                <LayerItem
-                  element={item}
-                  isSelected={selectedIds.includes(item.id)}
-                  onClick={() => selectElement(item.id)}
-                  onToggleVisibility={() => handleToggleVisibility(item.id)}
-                  onToggleLock={() => handleToggleLock(item.id)}
-                  index={originalIndex}
-                  total={elements.length}
-                />
-              );
-            }}
-          />
-        ) : (
-          <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-            <Layers className="w-8 h-8 mb-2 opacity-50" aria-hidden="true" />
-            <span className="text-sm">
-              {searchQuery ? 'No matching layers' : 'No layers yet'}
-            </span>
-            <span className="text-xs mt-1 text-muted-foreground/50">
-              {searchQuery ? 'Try a different search' : 'Create shapes to get started'}
-            </span>
+      {/* ── Layer List ── */}
+      <div className="flex-1 overflow-y-auto py-1 px-1.5">
+        {elements.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-32 gap-2">
+            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+              <Square size={18} className="text-muted-foreground/40" />
+            </div>
+            <p className="text-xs text-muted-foreground/60 text-center leading-relaxed">
+              No layers yet.<br />Draw something on the canvas.
+            </p>
           </div>
+        ) : (
+          <AnimatePresence>
+            {displayElements.map((element, i) => (
+              <LayerItem
+                key={element.id}
+                element={element}
+                isSelected={selectedIds.includes(element.id)}
+                index={i}
+                total={elements.length}
+              />
+            ))}
+          </AnimatePresence>
         )}
       </div>
 
-      {/* Footer Actions */}
-      {hasSelection && (
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="p-3 border-t border-border space-y-2"
-        >
-          {/* Layer Order */}
-          <div className="flex gap-1">
-            <button
-              onClick={bringToFront}
-              className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-muted text-muted-foreground rounded-md hover:bg-accent transition-colors text-xs"
-              title="Bring to Front (Ctrl+])"
-            >
-              <ChevronUp size={12} />
-              Front
-            </button>
-            <button
-              onClick={bringForward}
-              className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-muted text-muted-foreground rounded-md hover:bg-accent transition-colors text-xs"
-              title="Bring Forward (Ctrl+Shift+])"
-            >
-              <ChevronUp size={12} />
-              Up
-            </button>
-            <button
-              onClick={sendBackward}
-              className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-muted text-muted-foreground rounded-md hover:bg-accent transition-colors text-xs"
-              title="Send Backward (Ctrl+Shift+[)"
-            >
-              <ChevronDown size={12} />
-              Down
-            </button>
-            <button
-              onClick={sendToBack}
-              className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-muted text-muted-foreground rounded-md hover:bg-accent transition-colors text-xs"
-              title="Send to Back (Ctrl+[)"
-            >
-              <ChevronDown size={12} />
-              Back
-            </button>
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-2">
-            <button
-              onClick={duplicateSelected}
-              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-muted text-muted-foreground rounded-md hover:bg-accent transition-colors"
-            >
-              <Copy size={14} />
-              <span className="text-xs">Duplicate</span>
-            </button>
-            <button
-              onClick={deleteSelected}
-              className="flex items-center justify-center px-3 py-2 bg-red-500/10 text-red-400 rounded-md hover:bg-red-500/20 transition-colors"
-            >
-              <Trash2 size={14} />
-            </button>
-          </div>
-        </motion.div>
+      {/* ── Footer ── */}
+      {elements.length > 0 && (
+        <div className="flex items-center gap-1 px-3 py-2 border-t border-border flex-shrink-0">
+          <button
+            type="button"
+            className="text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+            onClick={hasSelection ? clearSelection : selectAll}
+          >
+            {hasSelection
+              ? `Deselect (${selectedIds.length})`
+              : 'Select all'}
+          </button>
+        </div>
       )}
-    </motion.div>
+    </div>
   );
 };
 

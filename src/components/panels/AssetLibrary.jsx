@@ -1,45 +1,37 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Search, Square, Circle, Triangle, Star, Hexagon, Type, Minus, ArrowRight, Image } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Search, Square, Circle, Triangle, Star, Hexagon, Type,
+  Minus, ArrowRight, Layout, MousePointer2, Image as ImageIcon,
+  Plus, Sparkles, Filter
+} from 'lucide-react';
 import { COLORS } from '@/constants';
 
 const ASSET_CATEGORIES = [
-  { id: 'shapes', label: 'Basic Shapes' },
-  { id: 'ui', label: 'UI Elements' },
+  { id: 'shapes', label: 'Shapes', icon: Square },
+  { id: 'ui',     label: 'UI Components', icon: Layout },
+  { id: 'icons',  label: 'Icons', icon: MousePointer2 },
 ];
 
 const PRESET_ASSETS = {
   shapes: [
-    { type: 'rectangle', label: 'Square', icon: Square, defaultProps: { width: 100, height: 100, fill: COLORS.indigo500, cornerRadius: 0 } },
-    { type: 'rectangle', label: 'Rounded Rect', icon: Square, defaultProps: { width: 120, height: 80, fill: COLORS.teal500, cornerRadius: 16 } },
-    { type: 'circle', label: 'Circle', icon: Circle, defaultProps: { radius: 50, fill: COLORS.rose500 } },
-    { type: 'circle', label: 'Ellipse', icon: Circle, defaultProps: { radiusX: 60, radiusY: 40, fill: COLORS.amber500 } },
-    { type: 'polygon', label: 'Triangle', icon: Triangle, defaultProps: { sides: 3, radius: 50, fill: COLORS.emerald500 } },
-    { type: 'star', label: 'Star', icon: Star, defaultProps: { numPoints: 5, innerRadius: 25, outerRadius: 50, fill: COLORS.yellow500 } },
-    { type: 'polygon', label: 'Hexagon', icon: Hexagon, defaultProps: { sides: 6, radius: 50, fill: COLORS.purple500 } },
-    { type: 'text', label: 'Text Block', icon: Type, defaultProps: { text: 'Hello World', fontSize: 24, fill: COLORS.slate100 } },
-    { type: 'line', label: 'Line', icon: Minus, defaultProps: { points: [0, 0, 100, 0], stroke: COLORS.slate400, strokeWidth: 2 } },
-    { type: 'arrow', label: 'Arrow', icon: ArrowRight, defaultProps: { points: [0, 0, 100, 0], stroke: COLORS.slate400, strokeWidth: 2, pointerLength: 10, pointerWidth: 10 } },
+    { type: 'rectangle', label: 'Square', icon: Square, defaultProps: { width: 100, height: 100, fill: '#6366F1', cornerRadius: 0 } },
+    { type: 'rectangle', label: 'Rounded', icon: Square, defaultProps: { width: 120, height: 80, fill: '#14B8A6', cornerRadius: 16 } },
+    { type: 'circle',    label: 'Circle', icon: Circle, defaultProps: { radius: 50, fill: '#EF4444' } },
+    { type: 'polygon',   label: 'Triangle', icon: Triangle, defaultProps: { sides: 3, radius: 50, fill: '#10B981' } },
+    { type: 'star',      label: 'Star', icon: Star, defaultProps: { numPoints: 5, innerRadius: 25, outerRadius: 50, fill: '#F59E0B' } },
+    { type: 'polygon',   label: 'Hexagon', icon: Hexagon, defaultProps: { sides: 6, radius: 50, fill: '#8B5CF6' } },
+    { type: 'text',      label: 'Heading', icon: Type, defaultProps: { text: 'Heading', fontSize: 32, fontWeight: 'bold', fill: '#FFFFFF' } },
+    { type: 'line',      label: 'Line', icon: Minus, defaultProps: { points: [0, 0, 100, 0], stroke: '#94A3B8', strokeWidth: 2 } },
   ],
   ui: [
-    { 
-      type: 'rectangle', 
-      label: 'Button', 
-      icon: Square, 
-      defaultProps: { width: 120, height: 40, fill: COLORS.indigo500, cornerRadius: 6 }
-    },
-    { 
-      type: 'rectangle', 
-      label: 'Card', 
-      icon: Square, 
-      defaultProps: { width: 200, height: 250, fill: COLORS.slate800, cornerRadius: 12, stroke: COLORS.slate700, strokeWidth: 1 }
-    },
-    { 
-      type: 'circle', 
-      label: 'Avatar', 
-      icon: Circle, 
-      defaultProps: { radius: 32, fill: COLORS.slate700, stroke: COLORS.slate600, strokeWidth: 2 }
-    },
+    { type: 'rectangle', label: 'Primary Button', icon: Square, defaultProps: { width: 140, height: 48, fill: '#6366F1', cornerRadius: 8, name: 'Button' } },
+    { type: 'rectangle', label: 'Card Base', icon: Square, defaultProps: { width: 240, height: 320, fill: '#1E293B', cornerRadius: 16, stroke: '#334155', strokeWidth: 1, name: 'Card' } },
+    { type: 'circle',    label: 'Avatar', icon: Circle, defaultProps: { radius: 32, fill: '#334155', stroke: '#475569', strokeWidth: 2, name: 'Avatar' } },
+    { type: 'rectangle', label: 'Input Field', icon: Type, defaultProps: { width: 280, height: 44, fill: 'transparent', cornerRadius: 6, stroke: '#475569', strokeWidth: 1, name: 'Input' } },
+  ],
+  icons: [
+    { type: 'text', label: 'Icon Label', icon: Sparkles, defaultProps: { text: '✨', fontSize: 40, fill: '#FFFFFF' } },
   ]
 };
 
@@ -48,7 +40,6 @@ const AssetLibrary = () => {
   const [activeCategory, setActiveCategory] = useState('shapes');
 
   const handleDragStart = (e, asset) => {
-    // Set the drag payload
     const payload = {
       type: 'canvas/asset',
       elementType: asset.type,
@@ -56,77 +47,123 @@ const AssetLibrary = () => {
     };
     e.dataTransfer.setData('application/json', JSON.stringify(payload));
     e.dataTransfer.effectAllowed = 'copy';
+    
+    // Create a ghost image for dragging
+    const ghost = document.createElement('div');
+    ghost.style.width = '40px';
+    ghost.style.height = '40px';
+    ghost.style.background = 'var(--primary)';
+    ghost.style.borderRadius = '8px';
+    ghost.style.position = 'absolute';
+    ghost.style.top = '-1000px';
+    document.body.appendChild(ghost);
+    e.dataTransfer.setDragImage(ghost, 20, 20);
+    setTimeout(() => document.body.removeChild(ghost), 0);
   };
 
-  const filteredAssets = PRESET_ASSETS[activeCategory].filter(asset => 
+  const filteredAssets = (PRESET_ASSETS[activeCategory] || []).filter(asset => 
     asset.label.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      {/* Search */}
-      <div className="px-4 py-3 border-b border-border">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+    <div className="flex flex-col h-full overflow-hidden bg-[hsl(var(--sidebar-background))]">
+      {/* ── Search ── */}
+      <div className="px-3 py-3 border-b border-border/60">
+        <div className="relative group">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
           <input
             type="text"
-            placeholder="Search assets..."
+            placeholder="Search elements..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-muted border border-border rounded-lg text-sm text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-indigo-500 transition-colors"
+            className="w-full pl-8 pr-3 py-1.5 bg-secondary/30 hover:bg-secondary/50 focus:bg-background border border-border/50 focus:border-primary/50 rounded-lg text-xs text-foreground placeholder-muted-foreground/40 outline-none transition-all"
           />
         </div>
       </div>
 
-      {/* Categories */}
-      <div className="flex gap-2 px-4 py-2 overflow-x-auto no-scrollbar border-b border-border shrink-0">
-        {ASSET_CATEGORIES.map(category => (
-          <button
-            key={category.id}
-            onClick={() => setActiveCategory(category.id)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-              activeCategory === category.id
-                ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/50'
-                : 'bg-muted text-muted-foreground border border-transparent hover:bg-accent'
-            }`}
-          >
-            {category.label}
-          </button>
-        ))}
+      {/* ── Categories ── */}
+      <div className="flex gap-1 p-1.5 overflow-x-auto no-scrollbar border-b border-border/40 bg-secondary/10 shrink-0">
+        {ASSET_CATEGORIES.map(category => {
+          const isActive = activeCategory === category.id;
+          const Icon = category.icon;
+          return (
+            <button
+              key={category.id}
+              onClick={() => setActiveCategory(category.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium whitespace-nowrap transition-all
+                ${isActive
+                  ? 'bg-background text-primary shadow-sm border border-border/50'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                }`}
+            >
+              <Icon size={12} strokeWidth={isActive ? 2.5 : 1.8} />
+              {category.label}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Asset Grid */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
-        {filteredAssets.length > 0 ? (
-          <div className="grid grid-cols-2 gap-3">
-            {filteredAssets.map((asset, index) => {
-              const Icon = asset.icon;
-              return (
-                <motion.div
-                  key={index}
-                  draggable="true"
-                  onDragStart={(e) => handleDragStart(e, asset)}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="bg-muted/50 border border-border/50 rounded-lg p-3 flex flex-col items-center gap-2 cursor-grab active:cursor-grabbing hover:bg-accent/50 hover:border-border transition-colors"
-                >
-                  <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center text-foreground">
-                    <Icon size={20} />
-                  </div>
-                  <span className="text-xs text-muted-foreground text-center select-none">{asset.label}</span>
-                </motion.div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground py-8">
-            <Image className="w-8 h-8 mb-2 opacity-50" />
-            <span className="text-sm">No assets found</span>
-          </div>
-        )}
+      {/* ── Asset Grid ── */}
+      <div className="flex-1 overflow-y-auto p-3 custom-scrollbar">
+        <AnimatePresence mode="popLayout">
+          {filteredAssets.length > 0 ? (
+            <motion.div 
+              layout
+              className="grid grid-cols-2 gap-2"
+            >
+              {filteredAssets.map((asset, index) => {
+                const Icon = asset.icon;
+                return (
+                  <motion.div
+                    key={`${asset.label}-${index}`}
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    draggable="true"
+                    onDragStart={(e) => handleDragStart(e, asset)}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.96 }}
+                    className="asset-card group"
+                  >
+                    <div className="asset-card-preview">
+                      <Icon size={20} strokeWidth={1.5} className="text-muted-foreground/50 group-hover:text-primary transition-colors duration-300" />
+                      
+                      {/* Drag handle hint */}
+                      <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Plus size={10} className="text-primary" />
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-medium text-muted-foreground group-hover:text-foreground truncate w-full text-center px-1 transition-colors">
+                      {asset.label}
+                    </span>
+
+                    {/* Glossy overlay on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 pointer-events-none rounded-xl transition-opacity" />
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          ) : (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center justify-center py-12 text-center"
+            >
+              <div className="w-12 h-12 rounded-full bg-secondary/30 flex items-center justify-center mb-3">
+                <Filter size={20} className="text-muted-foreground/30" />
+              </div>
+              <p className="text-xs font-medium text-muted-foreground">No matches found</p>
+              <p className="text-[10px] text-muted-foreground/50 mt-1">Try a different search term</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
         
-        <div className="mt-8 text-center text-xs text-muted-foreground/50">
-          <p>Drag items onto the canvas</p>
+        <div className="mt-8 pb-4 flex flex-col items-center gap-2">
+          <div className="flex items-center gap-2 text-[10px] text-muted-foreground/30 font-medium tracking-wide border border-border/30 rounded-full px-3 py-1">
+            <MousePointer2 size={10} />
+            DRAG TO CANVAS
+          </div>
         </div>
       </div>
     </div>

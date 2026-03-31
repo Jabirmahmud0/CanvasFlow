@@ -1,561 +1,370 @@
 import React, { useEffect, useRef, useState, useCallback, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Undo2, Redo2, Copy, Scissors, Clipboard, Trash2,
+  MousePointer2, Square as SquareIcon, X, Keyboard,
+} from 'lucide-react';
 import { useCanvasStore } from '@/store/useCanvasStore';
-import { TOOLS, SHORTCUTS } from '@/constants';
+import { useTheme } from '@/hooks/useTheme';
+import { TOOLS } from '@/constants';
 import TopToolbar from '@/components/panels/TopToolbar';
 import Canvas from '@/components/canvas/Canvas';
-import { PWAUpdatePrompt } from '@/components/ui/PWAUpdatePrompt';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import { Toaster, toast } from 'sonner';
 import './App.css';
 
-const LeftSidebar = lazy(() => import('@/components/panels/LeftSidebar'));
+const LeftSidebar  = lazy(() => import('@/components/panels/LeftSidebar'));
 const PropertiesPanel = lazy(() => import('@/components/panels/PropertiesPanel'));
 const FloatingToolbar = lazy(() => import('@/components/panels/FloatingToolbar'));
+const PWAUpdatePrompt = lazy(() => import('@/components/ui/PWAUpdatePrompt').then(m => ({ default: m.PWAUpdatePrompt })));
 
-// Context Menu Component
+/* ─── Context Menu ─── */
 const ContextMenu = ({ x, y, onClose, items }) => {
   useEffect(() => {
-    const handleClick = () => onClose();
-    document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
+    const h = () => onClose();
+    document.addEventListener('click', h);
+    document.addEventListener('contextmenu', h);
+    return () => { document.removeEventListener('click', h); document.removeEventListener('contextmenu', h); };
   }, [onClose]);
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      style={{ left: x, top: y }}
-      className="fixed z-50 min-w-[160px] bg-popover border border-border rounded-lg shadow-xl py-1 text-popover-foreground"
+      initial={{ opacity: 0, scale: 0.94, y: -4 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.94 }}
+      transition={{ duration: 0.1 }}
+      style={{ left: Math.min(x, window.innerWidth - 210), top: Math.min(y, window.innerHeight - 320) }}
+      className="context-menu fixed"
     >
-      {items.map((item, index) => (
-        <React.Fragment key={index}>
-          {item.divider ? (
-            <div className="border-t border-border my-1" />
-          ) : (
-            <button
-              onClick={() => { item.onClick(); onClose(); }}
-              disabled={item.disabled}
-              className={`
-                w-full flex items-center justify-between px-4 py-2 text-sm transition-colors
-                ${item.disabled 
-                  ? 'text-muted-foreground/50 cursor-not-allowed' 
-                  : 'text-foreground/80 hover:bg-accent hover:text-accent-foreground'
-                }
-                ${item.danger ? 'text-red-400 hover:bg-red-500/10' : ''}
-              `}
-            >
-              <span className="flex items-center gap-2">
-                {item.icon}
-                {item.label}
-              </span>
-              {item.shortcut && (
-                <span className="text-xs text-muted-foreground">{item.shortcut}</span>
-              )}
-            </button>
-          )}
-        </React.Fragment>
-      ))}
+      {items.map((item, i) =>
+        item.divider ? (
+          <div key={i} className="context-menu-separator" />
+        ) : (
+          <button
+            key={i}
+            type="button"
+            disabled={item.disabled}
+            className={`context-menu-item w-full ${item.danger ? 'destructive' : ''} ${item.disabled ? 'opacity-40 pointer-events-none' : ''}`}
+            onClick={() => { item.onClick(); onClose(); }}
+          >
+            {item.icon && React.isValidElement(item.icon) ? item.icon : null}
+            <span className="flex-1 text-left">{item.label}</span>
+            {item.shortcut && <span className="shortcut">{item.shortcut}</span>}
+          </button>
+        )
+      )}
     </motion.div>
   );
 };
 
-// Toast Notification
-const Toast = ({ message, type = 'info', onClose }) => {
-  useEffect(() => {
-    const timer = setTimeout(onClose, 3000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
 
-  const colors = {
-    info: 'bg-secondary border-border text-secondary-foreground',
-    success: 'bg-green-500/20 border-green-500/50 text-green-600 dark:text-green-400',
-    error: 'bg-red-500/20 border-red-500/50 text-red-600 dark:text-red-400',
-    warning: 'bg-amber-500/20 border-amber-500/50 text-amber-600 dark:text-amber-400',
-  };
+/* ─── Shortcuts Modal ─── */
+const SHORTCUT_GROUPS = [
+  { category: 'Tools', items: [
+    { key: 'V',          action: 'Select' },
+    { key: 'E',          action: 'Eraser' },
+    { key: 'R',          action: 'Rectangle' },
+    { key: 'C',          action: 'Circle' },
+    { key: 'T',          action: 'Text' },
+    { key: 'L',          action: 'Line' },
+    { key: 'A',          action: 'Arrow' },
+    { key: 'S',          action: 'Star' },
+    { key: 'P',          action: 'Polygon' },
+    { key: 'H',          action: 'Pan' },
+    { key: 'Space ↓',   action: 'Temporary Pan' },
+  ]},
+  { category: 'Actions', items: [
+    { key: 'Ctrl+Z',     action: 'Undo' },
+    { key: 'Ctrl+Shift+Z', action: 'Redo' },
+    { key: 'Ctrl+D',     action: 'Duplicate' },
+    { key: 'Ctrl+C',     action: 'Copy' },
+    { key: 'Ctrl+X',     action: 'Cut' },
+    { key: 'Ctrl+V',     action: 'Paste' },
+    { key: 'Del',        action: 'Delete' },
+    { key: 'Ctrl+A',     action: 'Select All' },
+    { key: 'Esc',        action: 'Deselect' },
+  ]},
+  { category: 'View', items: [
+    { key: 'Ctrl++',     action: 'Zoom In' },
+    { key: 'Ctrl+-',     action: 'Zoom Out' },
+    { key: 'Ctrl+0',     action: 'Reset Zoom' },
+    { key: 'Ctrl+1',     action: 'Fit to Screen' },
+    { key: 'G',          action: 'Toggle Grid' },
+    { key: 'U',          action: 'Toggle Guides' },
+    { key: '?',          action: 'Show Shortcuts' },
+  ]},
+  { category: 'Layer', items: [
+    { key: 'Ctrl+]',     action: 'Bring to Front' },
+    { key: 'Ctrl+[',     action: 'Send to Back' },
+    { key: 'Ctrl+⇧+]',  action: 'Bring Forward' },
+    { key: 'Ctrl+⇧+[',  action: 'Send Backward' },
+  ]},
+];
 
-  return (
+const ShortcutsModal = ({ onClose }) => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9990] flex items-center justify-center p-4"
+    onClick={onClose}
+  >
     <motion.div
-      initial={{ y: 50, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      exit={{ y: 50, opacity: 0 }}
-      className={`fixed bottom-20 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg border ${colors[type]} shadow-xl z-50`}
+      initial={{ scale: 0.93, opacity: 0, y: 12 }}
+      animate={{ scale: 1, opacity: 1, y: 0 }}
+      exit={{ scale: 0.93, opacity: 0, y: 12 }}
+      transition={{ type: 'spring', stiffness: 450, damping: 30 }}
+      className="bg-[hsl(var(--surface-elevated))] border border-border rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-auto"
+      onClick={(e) => e.stopPropagation()}
     >
-      {message}
+      {/* Header */}
+      <div className="sticky top-0 flex items-center justify-between px-6 py-4 border-b border-border bg-[hsl(var(--surface-elevated))] z-10">
+        <div className="flex items-center gap-2">
+          <Keyboard size={16} className="text-primary" />
+          <h2 className="text-base font-semibold text-foreground">Keyboard Shortcuts</h2>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="tool-btn !w-7 !h-7 !rounded-md opacity-50 hover:opacity-100"
+        >
+          <X size={14} />
+        </button>
+      </div>
+
+      {/* Grid of shortcut groups */}
+      <div className="p-6 grid grid-cols-2 gap-6">
+        {SHORTCUT_GROUPS.map(({ category, items }) => (
+          <div key={category}>
+            <p className="panel-section-header mb-3">{category}</p>
+            <div className="flex flex-col gap-1.5">
+              {items.map(({ key, action }) => (
+                <div key={key} className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-muted-foreground">{action}</span>
+                  <kbd>{key}</kbd>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </motion.div>
+  </motion.div>
+);
+
+/* ─── Status Bar ─── */
+const StatusBar = ({ onShowShortcuts }) => {
+  const { elements, selectedIds, zoom } = useCanvasStore();
+  return (
+    <div className="status-bar">
+      <div className="flex items-center gap-1.5">
+        <span className="status-badge">
+          {elements.length} layer{elements.length !== 1 ? 's' : ''}
+        </span>
+        {selectedIds.length > 0 && (
+          <span className="status-badge accent">
+            {selectedIds.length} selected
+          </span>
+        )}
+      </div>
+      <div className="flex-1" />
+      <button
+        type="button"
+        title="Keyboard Shortcuts"
+        className="tool-btn !w-6 !h-6 !rounded opacity-40 hover:opacity-100 transition-opacity ml-2"
+        onClick={onShowShortcuts}
+      >
+        <Keyboard size={12} />
+      </button>
+    </div>
   );
 };
 
+/* ─── App ─── */
 function App() {
   const canvasContainerRef = useRef(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [contextMenu, setContextMenu] = useState(null);
-  const [toast, setToast] = useState(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [confirmation, setConfirmation] = useState(null);
-  
+  const [leftCollapsed, setLeftCollapsed] = useState(false);
+  const [rightCollapsed, setRightCollapsed] = useState(false);
+
   const {
-    initialize,
-    activeTool,
-    setActiveTool,
-    undo,
-    redo,
-    deleteSelected,
-    selectAll,
-    deselectAll,
-    duplicateSelected,
-    copy,
-    cut,
-    paste,
-    canUndo,
-    canRedo,
-    zoomIn,
-    zoomOut,
-    resetZoom,
-    centerCanvas,
-    toggleGrid,
-    toggleSnapToGrid,
-    toggleSmartGuides,
-    bringToFront,
-    sendToBack,
-    bringForward,
-    sendBackward,
-    selectedIds,
-    elements,
+    initialize, activeTool, setActiveTool,
+    undo, redo, deleteSelected, selectAll, clearSelection,
+    duplicateSelected, copy, cut, paste,
+    canUndo, canRedo, zoomIn, zoomOut, resetZoom, centerCanvas,
+    toggleGrid, toggleSnapToGrid, toggleSmartGuides,
+    bringToFront, sendToBack, bringForward, sendBackward,
+    selectedIds, elements,
   } = useCanvasStore();
 
-  // Show toast helper
   const showToast = useCallback((message, type = 'info') => {
-    setToast({ message, type });
+    toast[type] ? toast[type](message) : toast(message);
   }, []);
 
-  // Initialize canvas with empty state
   useEffect(() => {
     initialize();
-    showToast('Welcome to CanvasFlow! Press ? for keyboard shortcuts', 'info');
-  }, [initialize, showToast]);
+  }, [initialize]);
 
-  // Update canvas size
+  // Canvas container resize observer
   useEffect(() => {
-    const updateSize = () => {
+    const update = () => {
       if (canvasContainerRef.current) {
         const { width, height } = canvasContainerRef.current.getBoundingClientRect();
         setCanvasSize({ width, height });
       }
     };
-
-    updateSize();
-    window.addEventListener('resize', updateSize);
-    return () => window.removeEventListener('resize', updateSize);
+    update();
+    const ro = new ResizeObserver(update);
+    if (canvasContainerRef.current) ro.observe(canvasContainerRef.current);
+    return () => ro.disconnect();
   }, []);
 
   // Keyboard shortcuts
   const handleKeyDown = useCallback((e) => {
-    // Ignore if typing in input
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-      if (e.key === 'Escape') {
-        e.target.blur();
-      }
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
+      if (e.key === 'Escape') e.target.blur();
       return;
     }
-
-    const { key, ctrlKey, shiftKey, metaKey, altKey } = e;
+    const { key, ctrlKey, shiftKey, metaKey } = e;
     const isCtrl = ctrlKey || metaKey;
 
-    // Space key for temporary pan (hold to pan)
-    if (key === ' ' && !isCtrl && !shiftKey && !altKey) {
+    if (key === ' ' && !isCtrl && !shiftKey) {
       e.preventDefault();
-      const previousTool = useCanvasStore.getState().activeTool;
-      if (previousTool !== TOOLS.PAN) {
-        // Store previous tool and switch to pan
-        window._previousTool = previousTool;
-        setActiveTool(TOOLS.PAN);
-      }
+      const prev = useCanvasStore.getState().activeTool;
+      if (prev !== TOOLS.PAN) { window._previousTool = prev; setActiveTool(TOOLS.PAN); }
       return;
     }
+    if (key === '?') { setShowShortcuts(true); return; }
 
-    // Help
-    if (key === '?') {
-      setShowShortcuts(true);
-      return;
+    if (!isCtrl && !shiftKey) {
+      const toolMap = { 
+        v: TOOLS.SELECT, 
+        e: TOOLS.ERASER, 
+        r: TOOLS.RECTANGLE, 
+        c: TOOLS.CIRCLE, 
+        t: TOOLS.TEXT, 
+        l: TOOLS.LINE, 
+        a: TOOLS.ARROW, 
+        s: TOOLS.STAR, 
+        p: TOOLS.POLYGON, 
+        h: TOOLS.PAN 
+      };
+      if (toolMap[key.toLowerCase()]) { setActiveTool(toolMap[key.toLowerCase()]); return; }
+      if (key.toLowerCase() === 'g') { toggleGrid(); return; }
+      if (key.toLowerCase() === 'u') { toggleSmartGuides(); return; }
     }
 
-    // Tool shortcuts (single key, no modifiers)
-    if (!isCtrl && !shiftKey && !altKey) {
-      switch (key.toLowerCase()) {
-        case 'v':
-          setActiveTool(TOOLS.SELECT);
-          return;
-        case 'r':
-          setActiveTool(TOOLS.RECTANGLE);
-          return;
-        case 'c':
-          setActiveTool(TOOLS.CIRCLE);
-          return;
-        case 't':
-          setActiveTool(TOOLS.TEXT);
-          return;
-        case 'l':
-          setActiveTool(TOOLS.LINE);
-          return;
-        case 'a':
-          setActiveTool(TOOLS.ARROW);
-          return;
-        case 's':
-          if (!isCtrl) {
-            setActiveTool(TOOLS.STAR);
-            return;
-          }
-          break;
-        case 'p':
-          setActiveTool(TOOLS.POLYGON);
-          return;
-        case 'h':
-          setActiveTool(TOOLS.PAN);
-          return;
-        case 'g':
-          toggleGrid();
-          showToast(`Grid ${!useCanvasStore.getState().showGrid ? 'shown' : 'hidden'}`, 'info');
-          return;
-        case 'u':
-          toggleSmartGuides();
-          showToast(`Smart guides ${!useCanvasStore.getState().showSmartGuides ? 'enabled' : 'disabled'}`, 'info');
-          return;
-      }
-    }
-
-    // Action shortcuts with Ctrl
     if (isCtrl) {
+      e.preventDefault();
       switch (key.toLowerCase()) {
-        case 'z':
-          e.preventDefault();
-          if (shiftKey) {
-            redo();
-          } else {
-            undo();
-          }
-          return;
-        case 'y':
-          e.preventDefault();
-          redo();
-          return;
-        case 'a':
-          e.preventDefault();
-          selectAll();
-          return;
-        case 'd':
-          e.preventDefault();
-          duplicateSelected();
-          showToast('Duplicated', 'success');
-          return;
-        case 'c':
-          e.preventDefault();
-          copy();
-          showToast('Copied to clipboard', 'success');
-          return;
-        case 'x':
-          e.preventDefault();
-          cut();
-          showToast('Cut to clipboard', 'success');
-          return;
-        case 'v':
-          e.preventDefault();
-          paste();
-          showToast('Pasted', 'success');
-          return;
-        case '=':
-        case '+':
-          e.preventDefault();
-          zoomIn();
-          return;
-        case '-':
-          e.preventDefault();
-          zoomOut();
-          return;
-        case '0':
-          e.preventDefault();
-          resetZoom();
-          showToast('Zoom reset', 'info');
-          return;
-        case '1':
-          e.preventDefault();
-          centerCanvas();
-          showToast('Canvas centered', 'info');
-          return;
-        case ']':
-          e.preventDefault();
-          if (shiftKey) {
-            bringForward();
-          } else {
-            bringToFront();
-          }
-          return;
-        case '[':
-          e.preventDefault();
-          if (shiftKey) {
-            sendBackward();
-          } else {
-            sendToBack();
-          }
-          return;
+        case 'z': shiftKey ? redo() : undo(); return;
+        case 'y': redo(); return;
+        case 'a': selectAll(); return;
+        case 'd': duplicateSelected(); showToast('Duplicated', 'success'); return;
+        case 'c': copy(); showToast('Copied', 'success'); return;
+        case 'x': cut(); showToast('Cut', 'success'); return;
+        case 'v': paste(); showToast('Pasted', 'success'); return;
+        case '=': case '+': zoomIn(); return;
+        case '-': zoomOut(); return;
+        case '0': resetZoom(); return;
+        case '1': centerCanvas(); return;
+        case ']': shiftKey ? bringForward() : bringToFront(); return;
+        case '[': shiftKey ? sendBackward() : sendToBack(); return;
       }
     }
 
-    // Delete
     if (key === 'Delete' || key === 'Backspace') {
-      if (selectedIds.length > 0) {
-        deleteSelected();
-        showToast('Deleted', 'info');
-      }
+      if (selectedIds.length > 0) { deleteSelected(); showToast('Deleted', 'info'); }
       return;
     }
-
-    // Escape - clear selection and reset tool
-    if (key === 'Escape') {
-      deselectAll();
-      setActiveTool(TOOLS.SELECT);
-      return;
-    }
-  }, [
-    setActiveTool,
-    undo,
-    redo,
-    deleteSelected,
-    selectAll,
-    deselectAll,
-    duplicateSelected,
-    copy,
-    cut,
-    paste,
-    zoomIn,
-    zoomOut,
-    resetZoom,
-    centerCanvas,
-    toggleGrid,
-    toggleSmartGuides,
-    bringToFront,
-    sendToBack,
-    bringForward,
-    sendBackward,
-    selectedIds,
-    showToast,
-  ]);
+    if (key === 'Escape') { clearSelection(); setActiveTool(TOOLS.SELECT); }
+  }, [setActiveTool, undo, redo, deleteSelected, selectAll, clearSelection, duplicateSelected, copy, cut, paste, zoomIn, zoomOut, resetZoom, centerCanvas, toggleGrid, toggleSmartGuides, bringToFront, sendToBack, bringForward, sendBackward, selectedIds, showToast]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  // Handle space key release - restore previous tool
   useEffect(() => {
-    const handleKeyUp = (e) => {
-      if (e.key === ' ' && window._previousTool) {
-        // Restore previous tool when space is released
-        setActiveTool(window._previousTool);
-        window._previousTool = null;
-      }
+    const up = (e) => {
+      if (e.key === ' ' && window._previousTool) { setActiveTool(window._previousTool); window._previousTool = null; }
     };
-
-    window.addEventListener('keyup', handleKeyUp);
-    return () => window.removeEventListener('keyup', handleKeyUp);
+    window.addEventListener('keyup', up);
+    return () => window.removeEventListener('keyup', up);
   }, [setActiveTool]);
 
-  // Handle context menu
+  // Context menu
   const handleContextMenu = useCallback((e) => {
     e.preventDefault();
     setContextMenu({ x: e.clientX, y: e.clientY });
   }, []);
 
-  // Context menu items
   const contextMenuItems = [
-    { 
-      label: 'Undo', 
-      onClick: undo, 
-      shortcut: 'Ctrl+Z',
-      disabled: !canUndo(),
-      icon: <span>↩</span>
-    },
-    { 
-      label: 'Redo', 
-      onClick: redo, 
-      shortcut: 'Ctrl+Y',
-      disabled: !canRedo(),
-      icon: <span>↪</span>
-    },
+    { icon: <Undo2 size={13} />, label: 'Undo',       shortcut: 'Ctrl+Z', onClick: undo,          disabled: !canUndo() },
+    { icon: <Undo2 size={13} className="scale-x-[-1]" />, label: 'Redo', shortcut: 'Ctrl+Y', onClick: redo, disabled: !canRedo() },
     { divider: true },
-    { 
-      label: 'Cut', 
-      onClick: cut, 
-      shortcut: 'Ctrl+X',
-      disabled: selectedIds.length === 0,
-      icon: <span>✂</span>
-    },
-    { 
-      label: 'Copy', 
-      onClick: copy, 
-      shortcut: 'Ctrl+C',
-      disabled: selectedIds.length === 0,
-      icon: <span>📋</span>
-    },
-    { 
-      label: 'Paste', 
-      onClick: paste, 
-      shortcut: 'Ctrl+V',
-      disabled: false,
-      icon: <span>📄</span>
-    },
+    { icon: <Scissors size={13} />,    label: 'Cut',         shortcut: 'Ctrl+X', onClick: cut,    disabled: selectedIds.length === 0 },
+    { icon: <Copy size={13} />,        label: 'Copy',        shortcut: 'Ctrl+C', onClick: copy,   disabled: selectedIds.length === 0 },
+    { icon: <Clipboard size={13} />,   label: 'Paste',       shortcut: 'Ctrl+V', onClick: paste },
     { divider: true },
-    { 
-      label: 'Select All', 
-      onClick: selectAll, 
-      shortcut: 'Ctrl+A',
-      icon: <span>☐</span>
-    },
-    { 
-      label: 'Deselect', 
-      onClick: deselectAll, 
-      shortcut: 'Esc',
-      disabled: selectedIds.length === 0,
-      icon: <span>⊘</span>
-    },
+    { icon: <MousePointer2 size={13} />, label: 'Select All', shortcut: 'Ctrl+A', onClick: selectAll },
     { divider: true },
-    { 
-      label: 'Delete', 
-      onClick: deleteSelected, 
-      shortcut: 'Del',
-      disabled: selectedIds.length === 0,
-      danger: true,
-      icon: <span>🗑</span>
-    },
-  ];
-
-  // Keyboard shortcuts help
-  const shortcutsList = [
-    { category: 'Tools', shortcuts: [
-      { key: 'V', action: 'Select' },
-      { key: 'R', action: 'Rectangle' },
-      { key: 'C', action: 'Circle' },
-      { key: 'T', action: 'Text' },
-      { key: 'L', action: 'Line' },
-      { key: 'A', action: 'Arrow' },
-      { key: 'S', action: 'Star' },
-      { key: 'P', action: 'Polygon' },
-      { key: 'H', action: 'Pan' },
-      { key: 'Space (hold)', action: 'Temporary Pan' },
-    ]},
-    { category: 'Actions', shortcuts: [
-      { key: 'Ctrl+Z', action: 'Undo' },
-      { key: 'Ctrl+Y', action: 'Redo' },
-      { key: 'Ctrl+D', action: 'Duplicate' },
-      { key: 'Ctrl+C', action: 'Copy' },
-      { key: 'Ctrl+X', action: 'Cut' },
-      { key: 'Ctrl+V', action: 'Paste' },
-      { key: 'Delete', action: 'Delete' },
-      { key: 'Ctrl+A', action: 'Select All' },
-      { key: 'Esc', action: 'Deselect' },
-    ]},
-    { category: 'View', shortcuts: [
-      { key: 'Ctrl++', action: 'Zoom In' },
-      { key: 'Ctrl+-', action: 'Zoom Out' },
-      { key: 'Ctrl+0', action: 'Reset Zoom' },
-      { key: 'Ctrl+1', action: 'Center Canvas' },
-      { key: 'G', action: 'Toggle Grid' },
-      { key: 'U', action: 'Toggle Smart Guides' },
-    ]},
-    { category: 'Layer', shortcuts: [
-      { key: 'Ctrl+]', action: 'Bring to Front' },
-      { key: 'Ctrl+[', action: 'Send to Back' },
-      { key: 'Ctrl+Shift+]', action: 'Bring Forward' },
-      { key: 'Ctrl+Shift+[', action: 'Send Backward' },
-    ]},
+    { icon: <Trash2 size={13} />, label: 'Delete', shortcut: 'Del', onClick: deleteSelected, disabled: selectedIds.length === 0, danger: true },
   ];
 
   return (
-    <div 
-      className="h-screen w-screen bg-background text-foreground flex flex-col overflow-hidden"
+    <div
+      className="h-screen w-screen flex flex-col overflow-hidden bg-background text-foreground"
       onContextMenu={handleContextMenu}
     >
-      {/* Top Toolbar */}
+      {/* ── Top Toolbar ── */}
       <TopToolbar
-        onConfirmLoadSamples={() => setConfirmation({
-          type: 'info',
-          title: 'Load Sample Data',
-          message: 'This will load sample shapes to demonstrate CanvasFlow features. Continue?',
-          onConfirm: () => {
-            useCanvasStore.getState().initializeWithSamples();
-            setToast({ message: 'Sample data loaded', type: 'success' });
-          }
-        })}
-        onConfirmClear={() => setConfirmation({
-          type: 'warning',
-          title: 'Clear Canvas',
-          message: 'Are you sure you want to clear the canvas? This cannot be undone.',
-          onConfirm: () => {
-            useCanvasStore.getState().clearCanvas();
-            setToast({ message: 'Canvas cleared', type: 'info' });
-          }
-        })}
+        onToggleShortcuts={() => setShowShortcuts(true)}
+        leftCollapsed={leftCollapsed}
+        rightCollapsed={rightCollapsed}
+        onToggleLeft={() => setLeftCollapsed(p => !p)}
+        onToggleRight={() => setRightCollapsed(p => !p)}
       />
 
-      {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Sidebar - Layers & Assets */}
-        <Suspense fallback={<div className="w-72 bg-card/95 backdrop-blur-sm border-r border-border flex flex-col relative z-10" />}>
-          <LeftSidebar />
+      {/* ── Main Body ── */}
+      <div className="flex-1 flex overflow-hidden min-h-0">
+        {/* Left Sidebar */}
+        <Suspense fallback={<div className="w-[240px] border-r border-border bg-[hsl(var(--sidebar-background))]" />}>
+          <LeftSidebar collapsed={leftCollapsed} onToggle={() => setLeftCollapsed(p => !p)} />
         </Suspense>
 
         {/* Canvas Area */}
-        <div 
-          ref={canvasContainerRef}
-          className="flex-1 relative bg-muted/20 overflow-hidden"
-        >
-          <Canvas 
-            width={canvasSize.width} 
-            height={canvasSize.height} 
-          />
-          
+        <div ref={canvasContainerRef} className="flex-1 relative overflow-hidden">
+          {canvasSize.width > 0 && (
+            <Canvas width={canvasSize.width} height={canvasSize.height} />
+          )}
+
           {/* Floating Toolbar */}
           <Suspense fallback={null}>
             <FloatingToolbar />
           </Suspense>
 
           {/* Status Bar */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="absolute bottom-0 left-0 right-0 h-8 bg-card/95 backdrop-blur-sm border-t border-border flex items-center justify-between px-4 text-xs text-muted-foreground"
-          >
-            <div className="flex items-center gap-4">
-              <span className="font-medium text-foreground/70">CanvasFlow</span>
-              <span className="text-border">|</span>
-              <span>{elements.length} elements</span>
-              {selectedIds.length > 0 && (
-                <>
-                  <span className="text-border">|</span>
-                  <span className="text-indigo-400">{selectedIds.length} selected</span>
-                </>
-              )}
-            </div>
-            <div className="flex items-center gap-4">
-              <span>Hold Space to Pan</span>
-              <span>Scroll to Zoom</span>
-              <span className="text-border">|</span>
-              <button
-                onClick={() => setShowShortcuts(true)}
-                className="hover:text-foreground transition-colors"
-              >
-                Press ? for shortcuts
-              </button>
-            </div>
-          </motion.div>
+          <StatusBar onShowShortcuts={() => setShowShortcuts(true)} />
         </div>
 
-        {/* Right Panel - Properties */}
-        <Suspense fallback={<div className="w-72 bg-card/95 backdrop-blur-sm border-l border-border" />}>
-          <PropertiesPanel />
+        {/* Right — Properties */}
+        <Suspense fallback={<div className="w-[240px] border-l border-border bg-[hsl(var(--sidebar-background))]" />}>
+          <AnimatePresence initial={false}>
+            {!rightCollapsed && (
+              <PropertiesPanel
+                collapsed={false}
+                onToggle={() => setRightCollapsed(true)}
+              />
+            )}
+          </AnimatePresence>
         </Suspense>
       </div>
 
-      {/* Context Menu */}
+      {/* ── Overlays ── */}
       <AnimatePresence>
         {contextMenu && (
           <ContextMenu
@@ -567,85 +376,39 @@ function App() {
         )}
       </AnimatePresence>
 
-      {/* Toast */}
+      <Toaster 
+        position="bottom-center" 
+        expand={false} 
+        theme={useTheme().theme === 'dark' ? 'dark' : (useTheme().theme === 'high-contrast' ? 'dark' : 'light')} 
+        toastOptions={{
+          style: {
+            background: 'hsl(var(--surface-elevated))',
+            border: '1px solid hsl(var(--border))',
+            color: 'hsl(var(--foreground))',
+            borderRadius: '12px',
+          }
+        }}
+      />
+
       <AnimatePresence>
-        {toast && (
-          <Toast
-            message={toast.message}
-            type={toast.type}
-            onClose={() => setToast(null)}
-          />
-        )}
+        {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
       </AnimatePresence>
 
-      {/* Keyboard Shortcuts Modal */}
-      <AnimatePresence>
-        {showShortcuts && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
-            onClick={() => setShowShortcuts(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-card border border-border rounded-2xl shadow-2xl max-w-3xl w-full mx-4 max-h-[80vh] overflow-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="p-6 border-b border-border flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-white">Keyboard Shortcuts</h2>
-                <button
-                  onClick={() => setShowShortcuts(false)}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="p-6 grid grid-cols-2 gap-8">
-                {shortcutsList.map((category) => (
-                  <div key={category.category}>
-                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
-                      {category.category}
-                    </h3>
-                    <div className="space-y-2">
-                      {category.shortcuts.map((shortcut) => (
-                        <div key={shortcut.key} className="flex items-center justify-between">
-                          <span className="text-foreground/80">{shortcut.action}</span>
-                          <kbd className="px-2 py-1 bg-muted border border-border rounded text-xs text-muted-foreground font-mono">
-                            {shortcut.key}
-                          </kbd>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Confirmation Dialog */}
       <AnimatePresence>
         {confirmation && (
           <ConfirmDialog
             title={confirmation.title}
             message={confirmation.message}
             type={confirmation.type}
-            onConfirm={() => {
-              confirmation.onConfirm();
-              setConfirmation(null);
-            }}
+            onConfirm={() => { confirmation.onConfirm(); setConfirmation(null); }}
             onCancel={() => setConfirmation(null)}
           />
         )}
       </AnimatePresence>
 
-      {/* PWA Update Prompt */}
-      <PWAUpdatePrompt />
+      <Suspense fallback={null}>
+        <PWAUpdatePrompt />
+      </Suspense>
     </div>
   );
 }

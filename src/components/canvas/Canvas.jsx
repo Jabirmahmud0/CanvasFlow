@@ -133,9 +133,10 @@ const Canvas = ({ width, height }) => {
   const [smartGuides, setSmartGuides] = useState([]);
   const [textEditor, setTextEditor] = useState(null);
   const [drawingCurrent, setDrawingCurrent] = useState(null);
+  const [isErasing, setIsErasing] = useState(false);
 
   // Get theme for light/dark mode
-  const { theme } = useTheme();
+  const { theme, canvasBackground: themeCanvasBg } = useTheme();
 
   // Initialize geometry worker
   const { calculateSmartGuides: calculateSmartGuidesWorker, isReady: workerReady } = useGeometryWorker();
@@ -170,6 +171,7 @@ const Canvas = ({ width, height }) => {
     endEditing,
     addToHistory,
     setActiveTool,
+    deleteElement,
   } = useCanvasStore();
 
   // Convert screen to world coordinates
@@ -235,6 +237,18 @@ const Canvas = ({ width, height }) => {
     if (e.evt.button === 1 || (e.evt.button === 0 && activeTool === TOOLS.PAN)) {
       setIsPanning(true);
       setPanStart({ x: pointer.x, y: pointer.y });
+      return;
+    }
+
+    // Eraser mode
+    if (activeTool === TOOLS.ERASER) {
+      setIsErasing(true);
+      const intersection = stage.getIntersection(pointer);
+      if (intersection && intersection !== stage) {
+        // Find the element node (could be nested inside a Group, so we search for a node with an ID)
+        const id = intersection.id();
+        if (id) deleteElement(id);
+      }
       return;
     }
 
@@ -316,6 +330,16 @@ const Canvas = ({ width, height }) => {
       return;
     }
 
+    // Eraser mode
+    if (activeTool === TOOLS.ERASER && isErasing) {
+      const intersection = stage.getIntersection(pointer);
+      if (intersection && intersection !== stage) {
+        const id = intersection.id();
+        if (id) deleteElement(id);
+      }
+      return;
+    }
+
     const worldPos = screenToWorld(pointer.x, pointer.y);
 
     // Drawing - update current position for preview
@@ -353,6 +377,12 @@ const Canvas = ({ width, height }) => {
     if (isPanning) {
       setIsPanning(false);
       setPanStart(null);
+      return;
+    }
+
+    // End erasing
+    if (isErasing) {
+      setIsErasing(false);
       return;
     }
 
@@ -492,6 +522,8 @@ const Canvas = ({ width, height }) => {
     
     if (activeTool === TOOLS.SELECT) {
       selectElement(id, e.evt.shiftKey);
+    } else if (activeTool === TOOLS.ERASER) {
+      deleteElement(id);
     }
   }, [activeTool, selectElement]);
 
@@ -677,7 +709,7 @@ const Canvas = ({ width, height }) => {
             y={-100000}
             width={200000}
             height={200000}
-            fill={theme === 'light' ? '#F8FAFC' : (theme === 'high-contrast' ? '#000000' : canvasBackground)}
+          fill={themeCanvasBg || canvasBackground}
           />
           
           {/* Grid */}

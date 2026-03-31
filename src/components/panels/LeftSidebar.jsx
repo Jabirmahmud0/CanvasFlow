@@ -1,56 +1,101 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Layers, Library } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Layers, Package, ChevronLeft } from 'lucide-react';
 import LayersPanel from './LayersPanel';
 import AssetLibrary from './AssetLibrary';
 
-const LeftSidebar = () => {
-  const [activeTab, setActiveTab] = useState('layers'); // 'layers' or 'assets'
+const TABS = [
+  { id: 'layers', label: 'Layers', icon: Layers },
+  { id: 'assets', label: 'Assets', icon: Package },
+];
+
+const LeftSidebar = ({ collapsed, onToggle }) => {
+  const [activeTab, setActiveTab] = useState('layers');
 
   return (
-    <motion.div
-      initial={{ x: -20, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      className="w-72 bg-sidebar/95 backdrop-blur-sm border-r border-border flex flex-col relative z-10"
-      role="complementary"
-      aria-label="Left sidebar"
-    >
-      {/* Sidebar Tabs */}
-      <div className="flex border-b border-border">
-        <button
-          onClick={() => setActiveTab('layers')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${
-            activeTab === 'layers' 
-              ? 'text-indigo-400 border-b-2 border-indigo-500 bg-accent/30' 
-              : 'text-muted-foreground hover:text-foreground hover:bg-accent/10'
-          }`}
-          aria-selected={activeTab === 'layers'}
-          role="tab"
+    <AnimatePresence initial={false}>
+      {!collapsed && (
+        <motion.aside
+          key="left-sidebar"
+          initial={{ width: 0, opacity: 0 }}
+          animate={{ width: 240, opacity: 1 }}
+          exit={{ width: 0, opacity: 0 }}
+          transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+          className="flex flex-col border-r border-border bg-[hsl(var(--sidebar-background))] overflow-hidden flex-shrink-0"
+          style={{ minWidth: 0 }}
         >
-          <Layers size={16} />
-          Layers
-        </button>
-        <button
-          onClick={() => setActiveTab('assets')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${
-            activeTab === 'assets' 
-              ? 'text-indigo-400 border-b-2 border-indigo-500 bg-accent/30' 
-              : 'text-muted-foreground hover:text-foreground hover:bg-accent/10'
-          }`}
-          aria-selected={activeTab === 'assets'}
-          role="tab"
-        >
-          <Library size={16} />
-          Assets
-        </button>
-      </div>
+          {/* ── Tab Header ── */}
+          <div className="flex items-center border-b border-border flex-shrink-0 relative h-10 px-1">
+            {TABS.map((tab) => {
+              const isActive = activeTab === tab.id;
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`relative flex items-center gap-1.5 px-3 h-full text-xs font-medium transition-colors rounded-md
+                    ${isActive
+                      ? 'text-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                    }`}
+                >
+                  <Icon size={13} strokeWidth={isActive ? 2.2 : 1.8} />
+                  {tab.label}
+                  {isActive && (
+                    <motion.div
+                      layoutId="sidebar-tab-indicator"
+                      className="absolute inset-0 bg-accent rounded-md"
+                      style={{ zIndex: -1 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 38 }}
+                    />
+                  )}
+                </button>
+              );
+            })}
 
-      {/* Content Area */}
-      <div className="flex-1 overflow-hidden flex flex-col bg-muted/10">
-        {activeTab === 'layers' && <LayersPanel isEmbedded={true} />}
-        {activeTab === 'assets' && <AssetLibrary />}
-      </div>
-    </motion.div>
+            {/* Collapse button */}
+            <button
+              type="button"
+              onClick={onToggle}
+              className="ml-auto tool-btn !w-7 !h-7 !rounded-md opacity-40 hover:opacity-100"
+              aria-label="Collapse sidebar"
+            >
+              <ChevronLeft size={14} />
+            </button>
+          </div>
+
+          {/* ── Panel Content ── */}
+          <div className="flex-1 overflow-hidden min-h-0">
+            <AnimatePresence mode="wait" initial={false}>
+              {activeTab === 'layers' ? (
+                <motion.div
+                  key="layers"
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -8 }}
+                  transition={{ duration: 0.15 }}
+                  className="h-full"
+                >
+                  <LayersPanel />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="assets"
+                  initial={{ opacity: 0, x: 8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 8 }}
+                  transition={{ duration: 0.15 }}
+                  className="h-full"
+                >
+                  <AssetLibrary />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.aside>
+      )}
+    </AnimatePresence>
   );
 };
 

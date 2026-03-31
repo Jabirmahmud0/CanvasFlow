@@ -3,10 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CanvasFlow</title>
+    <meta name="description" content="CanvasFlow — A production-grade infinite canvas editor with layers, smart guides, and multi-theme support." />
+    <meta name="theme-color" content="#0F172A" />
+    <meta property="og:title" content="CanvasFlow — Infinite Canvas Editor" />
+    <meta property="og:description" content="Professional infinite canvas editor built with React and Konva." />
+    <title>CanvasFlow — Infinite Canvas Editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;500;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+    <style>
+      /* Prevent FOUC */
+      html { visibility: hidden; }
+      html.theme-loaded { visibility: visible; }
+    </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Apply theme immediately to prevent flash
+      (function() {
+        const theme = localStorage.getItem('canvasflow-theme') || 'dark';
+        document.documentElement.className = theme;
+        document.documentElement.classList.add('theme-loaded');
+      })();
+    </script>
   </body>
 </html>

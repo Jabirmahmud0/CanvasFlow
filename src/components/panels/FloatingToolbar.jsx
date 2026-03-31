@@ -1,40 +1,19 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Trash2, 
-  Copy, 
-  Scissors,
-  Clipboard,
-  Layers,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  AlignVerticalJustifyCenter,
-  AlignHorizontalJustifyCenter,
-  AlignStartVertical,
-  AlignEndVertical,
-  ChevronUp,
-  ChevronDown,
-  Group,
-  Ungroup
+import {
+  Trash2, Copy, Scissors, Clipboard, ChevronUp, ChevronDown,
+  Layers, AlignLeft, AlignCenter, AlignRight,
+  AlignVerticalJustifyCenter, AlignHorizontalJustifyCenter,
+  AlignStartVertical, AlignEndVertical,
 } from 'lucide-react';
 import { useCanvasStore } from '@/store/useCanvasStore';
+import { ToolButton } from '@/components/ui/Tooltip';
 
 const FloatingToolbar = () => {
   const {
-    selectedIds,
-    deleteSelected,
-    duplicateSelected,
-    copy,
-    cut,
-    paste,
-    clipboard,
-    elements,
-    updateElement,
-    bringToFront,
-    sendToBack,
-    bringForward,
-    sendBackward,
+    selectedIds, deleteSelected, duplicateSelected,
+    copy, cut, paste, clipboard, elements, updateElement,
+    bringToFront, sendToBack,
   } = useCanvasStore();
 
   const hasSelection = selectedIds.length > 0;
@@ -42,93 +21,30 @@ const FloatingToolbar = () => {
   const hasClipboard = clipboard.length > 0;
 
   const handleAlign = (alignType) => {
-    const selectedElements = elements.filter((el) => selectedIds.includes(el.id));
-    if (selectedElements.length < 2) return;
-
-    let minX = Infinity, maxX = -Infinity;
-    let minY = Infinity, maxY = -Infinity;
+    const selected = elements.filter(el => selectedIds.includes(el.id));
+    if (selected.length < 2) return;
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     let totalX = 0, totalY = 0;
-
-    selectedElements.forEach((el) => {
-      const width = el.width || el.radius * 2 || 100;
-      const height = el.height || el.radius * 2 || 100;
-      minX = Math.min(minX, el.x);
-      maxX = Math.max(maxX, el.x + width);
-      minY = Math.min(minY, el.y);
-      maxY = Math.max(maxY, el.y + height);
-      totalX += el.x + width / 2;
-      totalY += el.y + height / 2;
+    selected.forEach(el => {
+      const w = el.width || el.radius * 2 || 100;
+      const h = el.height || el.radius * 2 || 100;
+      minX = Math.min(minX, el.x); maxX = Math.max(maxX, el.x + w);
+      minY = Math.min(minY, el.y); maxY = Math.max(maxY, el.y + h);
+      totalX += el.x + w / 2; totalY += el.y + h / 2;
     });
-
-    const centerX = totalX / selectedElements.length;
-    const centerY = totalY / selectedElements.length;
-
-    selectedElements.forEach((el) => {
-      const width = el.width || el.radius * 2 || 100;
-      const height = el.height || el.radius * 2 || 100;
-      let newX = el.x;
-      let newY = el.y;
-
-      switch (alignType) {
-        case 'left':
-          newX = minX;
-          break;
-        case 'center':
-          newX = centerX - width / 2;
-          break;
-        case 'right':
-          newX = maxX - width;
-          break;
-        case 'top':
-          newY = minY;
-          break;
-        case 'middle':
-          newY = centerY - height / 2;
-          break;
-        case 'bottom':
-          newY = maxY - height;
-          break;
-      }
-
-      updateElement(el.id, { x: newX, y: newY });
-    });
-  };
-
-  const handleDistribute = (axis) => {
-    const selectedElements = elements.filter((el) => selectedIds.includes(el.id));
-    if (selectedElements.length < 3) return;
-
-    const sorted = [...selectedElements].sort((a, b) => 
-      axis === 'x' ? a.x - b.x : a.y - b.y
-    );
-
-    const first = sorted[0];
-    const last = sorted[sorted.length - 1];
-    const firstSize = axis === 'x' 
-      ? (first.width || first.radius * 2 || 100)
-      : (first.height || first.radius * 2 || 100);
-    const lastSize = axis === 'x'
-      ? (last.width || last.radius * 2 || 100)
-      : (last.height || last.radius * 2 || 100);
-
-    const totalSpace = axis === 'x'
-      ? (last.x + lastSize / 2) - (first.x + firstSize / 2)
-      : (last.y + lastSize / 2) - (first.y + firstSize / 2);
-    
-    const spacing = totalSpace / (sorted.length - 1);
-
-    sorted.forEach((el, index) => {
-      if (index === 0 || index === sorted.length - 1) return;
-      
-      const size = axis === 'x'
-        ? (el.width || el.radius * 2 || 100)
-        : (el.height || el.radius * 2 || 100);
-      
-      const newPos = axis === 'x'
-        ? first.x + firstSize / 2 + spacing * index - size / 2
-        : first.y + firstSize / 2 + spacing * index - size / 2;
-
-      updateElement(el.id, { [axis]: newPos });
+    const cx = totalX / selected.length;
+    const cy = totalY / selected.length;
+    selected.forEach(el => {
+      const w = el.width || el.radius * 2 || 100;
+      const h = el.height || el.radius * 2 || 100;
+      const updates = {};
+      if (alignType === 'left')   updates.x = minX;
+      if (alignType === 'center') updates.x = cx - w / 2;
+      if (alignType === 'right')  updates.x = maxX - w;
+      if (alignType === 'top')    updates.y = minY;
+      if (alignType === 'middle') updates.y = cy - h / 2;
+      if (alignType === 'bottom') updates.y = maxY - h;
+      updateElement(el.id, updates);
     });
   };
 
@@ -136,150 +52,49 @@ const FloatingToolbar = () => {
     <AnimatePresence>
       {hasSelection && (
         <motion.div
-          initial={{ y: 20, opacity: 0, scale: 0.9 }}
-          animate={{ y: 0, opacity: 1, scale: 1 }}
-          exit={{ y: 20, opacity: 0, scale: 0.9 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50"
+          initial={{ y: 16, opacity: 0, scale: 0.92 }}
+          animate={{ y: 0,  opacity: 1, scale: 1 }}
+          exit={{ y: 16,   opacity: 0, scale: 0.92 }}
+          transition={{ type: 'spring', stiffness: 450, damping: 28, mass: 0.8 }}
+          className="absolute bottom-7 left-1/2 -translate-x-1/2 z-50 pointer-events-auto"
         >
-          <div className="flex items-center gap-1 px-2 py-2 bg-popover/95 backdrop-blur-sm border border-border rounded-xl shadow-2xl shadow-black/50">
+          <div className="floating-toolbar flex items-center gap-0.5 px-2 py-1.5">
             {/* Clipboard */}
-            <div className="flex items-center gap-1 pr-2 border-r border-border">
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={copy}
-                className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
-                title="Copy (Ctrl+C)"
-              >
-                <Copy size={18} />
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={cut}
-                className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
-                title="Cut (Ctrl+X)"
-              >
-                <Scissors size={18} />
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={paste}
+            <div className="flex items-center gap-0.5 pr-1.5 mr-0.5 border-r border-border">
+              <ToolButton icon={Copy}      label="Copy"  shortcut="Ctrl+C" onClick={copy}  tooltipSide="top" />
+              <ToolButton icon={Scissors}  label="Cut"   shortcut="Ctrl+X" onClick={cut}   tooltipSide="top" />
+              <ToolButton
+                icon={Clipboard}
+                label="Paste"
+                shortcut="Ctrl+V"
                 disabled={!hasClipboard}
-                className={`p-2 rounded-lg transition-colors ${
-                  hasClipboard 
-                    ? 'text-muted-foreground hover:text-foreground hover:bg-accent' 
-                    : 'text-muted-foreground/30 cursor-not-allowed'
-                }`}
-                title="Paste (Ctrl+V)"
-              >
-                <Clipboard size={18} />
-              </motion.button>
+                onClick={paste}
+                tooltipSide="top"
+              />
             </div>
 
-            {/* Layer Order */}
-            <div className="flex items-center gap-1 pr-2 border-r border-border">
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={bringToFront}
-                className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
-                title="Bring to Front (Ctrl+])"
-              >
-                <ChevronUp size={18} />
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={sendToBack}
-                className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
-                title="Send to Back (Ctrl+[)"
-              >
-                <ChevronDown size={18} />
-              </motion.button>
+            {/* Order */}
+            <div className="flex items-center gap-0.5 pr-1.5 mr-0.5 border-r border-border">
+              <ToolButton icon={ChevronUp}   label="Bring to Front" shortcut="Ctrl+]" onClick={bringToFront} tooltipSide="top" />
+              <ToolButton icon={ChevronDown} label="Send to Back"   shortcut="Ctrl+[" onClick={sendToBack}   tooltipSide="top" />
             </div>
 
             {/* Duplicate & Delete */}
-            <div className="flex items-center gap-1 pr-2 border-r border-border">
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={duplicateSelected}
-                className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
-                title="Duplicate (Ctrl+D)"
-              >
-                <Layers size={18} />
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={deleteSelected}
-                className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
-                title="Delete (Del)"
-              >
-                <Trash2 size={18} />
-              </motion.button>
+            <div className={`flex items-center gap-0.5 ${multiSelection ? 'pr-1.5 mr-0.5 border-r border-border' : ''}`}>
+              <ToolButton icon={Layers} label="Duplicate" shortcut="Ctrl+D" onClick={duplicateSelected} tooltipSide="top" />
+              <ToolButton icon={Trash2} label="Delete" shortcut="Del" onClick={deleteSelected} danger tooltipSide="top" />
             </div>
 
-            {/* Alignment */}
+            {/* Alignment (multi-select only) */}
             {multiSelection && (
-              <div className="flex items-center gap-1">
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => handleAlign('left')}
-                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
-                  title="Align Left"
-                >
-                  <AlignLeft size={18} />
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => handleAlign('center')}
-                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
-                  title="Align Center"
-                >
-                  <AlignHorizontalJustifyCenter size={18} />
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => handleAlign('right')}
-                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
-                  title="Align Right"
-                >
-                  <AlignRight size={18} />
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => handleAlign('top')}
-                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
-                  title="Align Top"
-                >
-                  <AlignStartVertical size={18} />
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => handleAlign('middle')}
-                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
-                  title="Align Middle"
-                >
-                  <AlignVerticalJustifyCenter size={18} />
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => handleAlign('bottom')}
-                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
-                  title="Align Bottom"
-                >
-                  <AlignEndVertical size={18} />
-                </motion.button>
+              <div className="flex items-center gap-0.5">
+                <ToolButton icon={AlignLeft}                   label="Align Left"   onClick={() => handleAlign('left')}   tooltipSide="top" />
+                <ToolButton icon={AlignHorizontalJustifyCenter} label="Align Center" onClick={() => handleAlign('center')} tooltipSide="top" />
+                <ToolButton icon={AlignRight}                  label="Align Right"  onClick={() => handleAlign('right')}  tooltipSide="top" />
+                <div className="toolbar-separator mx-0.5" />
+                <ToolButton icon={AlignStartVertical}          label="Align Top"    onClick={() => handleAlign('top')}    tooltipSide="top" />
+                <ToolButton icon={AlignVerticalJustifyCenter}  label="Align Middle" onClick={() => handleAlign('middle')} tooltipSide="top" />
+                <ToolButton icon={AlignEndVertical}            label="Align Bottom" onClick={() => handleAlign('bottom')} tooltipSide="top" />
               </div>
             )}
           </div>

@@ -2,169 +2,287 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   CanvasFlow Design System — CSS Variables
+   Three themes: dark (default), light, high-contrast-dark
+   ============================================================ */
+
 @layer base {
-  /* Custom cursor for SELECT tool */
-  .cursor-select {
-    cursor: move;
-  }
-  
-  /* Cursor when hovering over selectable elements in SELECT mode */
-  .cursor-select .konvajs-content {
-    cursor: move;
-  }
-  
-  .tabular-nums {
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* Text editor pulse animation */
-  @keyframes pulse {
-    0%, 100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.7;
-      transform: scale(1.02);
-    }
-  }
-
-  /* Text editor input styling */
-  .text-editor-input {
-    caret-color: #4ECDC4;
-  }
-  
-  .text-editor-input::selection {
-    background: rgba(78, 205, 196, 0.3);
-  }
-
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
-    --radius: 0.625rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
+  /* ─── DARK THEME (default) ─── */
+  :root,
   html.dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    /* Core surfaces */
+    --background: 222 47% 7%;          /* #0B0F1A — deepest bg */
+    --foreground: 213 31% 96%;         /* #F1F5FC */
+    --card: 222 47% 9%;                /* #0F172A */
+    --card-foreground: 213 31% 96%;
+    --popover: 222 47% 11%;            /* #141D2E */
+    --popover-foreground: 213 31% 96%;
+
+    /* Interactive */
+    --primary: 239 84% 67%;            /* #6366F1 indigo-500 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 222 47% 14%;          /* #1E293B slate-800 */
+    --secondary-foreground: 213 31% 96%;
+    --muted: 222 47% 14%;
+    --muted-foreground: 218 14% 55%;   /* #7B8BA0 */
+    --accent: 222 47% 18%;             /* #243049 */
+    --accent-foreground: 213 31% 96%;
+
+    /* Semantic */
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --border: 222 32% 18%;             /* #1F2D42 */
+    --input: 222 32% 18%;
+    --ring: 239 84% 67%;
+
+    /* Radius */
+    --radius: 0.5rem;
+
+    /* ── Sidebar ── */
+    --sidebar-background: 222 47% 8%;
+    --sidebar-foreground: 213 31% 90%;
+    --sidebar-primary: 239 84% 67%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 222 47% 14%;
+    --sidebar-accent-foreground: 213 31% 96%;
+    --sidebar-border: 222 32% 16%;
+    --sidebar-ring: 239 84% 67%;
+
+    /* ── Canvas-specific ── */
+    --canvas-bg: #0B0F1A;
+    --canvas-bg-surface: #0F172A;
+    --canvas-grid-color: #1E2A3B;
+    --canvas-grid-major: #1E2A3B;
+    --canvas-selection: rgba(99,102,241,0.15);
+    --canvas-selection-border: #6366F1;
+
+    /* ── Theme-aware component styles ── */
+    --scrollbar-track: #0F172A;
+    --scrollbar-thumb: #3B4A63;
+    --scrollbar-thumb-hover: #4E5F7A;
+    --kbd-bg: #1E293B;
+    --kbd-border: #2D3F58;
+    --kbd-shadow: #0B0F1A;
+    --kbd-text: #8BA3C1;
+    --tooltip-bg: #1E293B;
+    --tooltip-text: #CBD5E1;
+    --context-menu-bg: #141D2E;
+    --context-menu-border: #1F2D42;
+    --context-menu-hover: #1E2A3B;
+    --shimmer-from: #1E293B;
+    --shimmer-via: #243049;
+    --shimmer-to: #1E293B;
+    --glass-bg: rgba(15, 23, 42, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.06);
+    --surface-elevated: #141D2E;
+    --surface-overlay: #0F172A;
+
+    /* ── Focus ── */
+    --focus-ring: rgba(99, 102, 241, 0.5);
+
+    /* ── Accent glow ── */
+    --accent-glow: rgba(99, 102, 241, 0.25);
+    --accent-glow-lg: rgba(99, 102, 241, 0.15);
   }
 
+  /* ─── LIGHT THEME ─── */
   html.light {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --background: 210 20% 98%;         /* #F8FAFC */
+    --foreground: 222 47% 11%;         /* #0F172A */
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
+    --popover-foreground: 222 47% 11%;
 
-  html.high-contrast {
-    --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
-    --card: 0 0% 0%;
-    --card-foreground: 0 0% 100%;
-    --popover: 0 0% 0%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 0 0% 100%;
-    --primary-foreground: 0 0% 0%;
-    --secondary: 0 0% 0%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 0%;
-    --muted-foreground: 0 0% 100%;
-    --accent: 0 0% 100%;
-    --accent-foreground: 0 0% 0%;
-    --destructive: 0 100% 50%;
+    --primary: 239 84% 60%;            /* #5558E8 — slightly darker for light bg */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 20% 94%;          /* #EEF2F7 */
+    --secondary-foreground: 222 47% 20%;
+    --muted: 210 20% 94%;
+    --muted-foreground: 215 16% 48%;   /* #697285 */
+    --accent: 210 20% 90%;             /* #E4EAF2 */
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84% 50%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 100%;
-    --input: 0 0% 100%;
-    --ring: 0 0% 100%;
-    --sidebar-background: 0 0% 0%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 0 0% 100%;
-    --sidebar-accent-foreground: 0 0% 0%;
-    --sidebar-border: 0 0% 100%;
-    --sidebar-ring: 0 0% 100%;
-  }
-}
+    --border: 210 20% 88%;             /* #DCE3EC */
+    --input: 210 20% 88%;
+    --ring: 239 84% 60%;
 
-@layer base {
+    --sidebar-background: 210 20% 96%;
+    --sidebar-foreground: 222 47% 20%;
+    --sidebar-primary: 239 84% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 20% 90%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 210 20% 88%;
+    --sidebar-ring: 239 84% 60%;
+
+    /* Canvas */
+    --canvas-bg: #F0F4F8;
+    --canvas-bg-surface: #FFFFFF;
+    --canvas-grid-color: #C8D3E0;
+    --canvas-grid-major: #B8C5D5;
+    --canvas-selection: rgba(85, 88, 232, 0.1);
+    --canvas-selection-border: #5558E8;
+
+    /* Components */
+    --scrollbar-track: #EEF2F7;
+    --scrollbar-thumb: #BCC8D8;
+    --scrollbar-thumb-hover: #9AAEC4;
+    --kbd-bg: #EEF2F7;
+    --kbd-border: #D0DAE8;
+    --kbd-shadow: #C0CEDD;
+    --kbd-text: #556070;
+    --tooltip-bg: #1E293B;
+    --tooltip-text: #CBD5E1;
+    --context-menu-bg: #FFFFFF;
+    --context-menu-border: #DCE3EC;
+    --context-menu-hover: #F0F4F8;
+    --shimmer-from: #EEF2F7;
+    --shimmer-via: #FFFFFF;
+    --shimmer-to: #EEF2F7;
+    --glass-bg: rgba(255, 255, 255, 0.88);
+    --glass-border: rgba(0, 0, 0, 0.08);
+    --surface-elevated: #FFFFFF;
+    --surface-overlay: rgba(255, 255, 255, 0.95);
+    --focus-ring: rgba(85, 88, 232, 0.4);
+    --accent-glow: rgba(85, 88, 232, 0.15);
+    --accent-glow-lg: rgba(85, 88, 232, 0.08);
+  }
+
+  /* ─── HIGH CONTRAST DARK THEME ─── */
+  html.high-contrast {
+    --background: 0 0% 5%;             /* #0D0D0D */
+    --foreground: 0 0% 98%;            /* #FAFAFA */
+    --card: 0 0% 8%;                   /* #141414 */
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 10%;               /* #1A1A1A */
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 55 100% 60%;            /* #FFE034 — vivid yellow for max contrast */
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 12%;             /* #1F1F1F */
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 72%;      /* #B8B8B8 */
+    --accent: 0 0% 16%;                /* #292929 */
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 100% 60%;         /* bright red */
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 25%;                /* #404040 */
+    --input: 0 0% 25%;
+    --ring: 55 100% 60%;
+
+    --sidebar-background: 0 0% 5%;
+    --sidebar-foreground: 0 0% 92%;
+    --sidebar-primary: 55 100% 60%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 0 0% 14%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 22%;
+    --sidebar-ring: 55 100% 60%;
+
+    /* Canvas — dark with high contrast grid */
+    --canvas-bg: #080808;
+    --canvas-bg-surface: #0D0D0D;
+    --canvas-grid-color: #2A2A2A;
+    --canvas-grid-major: #3A3A3A;
+    --canvas-selection: rgba(255, 224, 52, 0.15);
+    --canvas-selection-border: #FFE034;
+
+    /* Components */
+    --scrollbar-track: #0D0D0D;
+    --scrollbar-thumb: #404040;
+    --scrollbar-thumb-hover: #555555;
+    --kbd-bg: #1F1F1F;
+    --kbd-border: #404040;
+    --kbd-shadow: #000000;
+    --kbd-text: #B8B8B8;
+    --tooltip-bg: #1F1F1F;
+    --tooltip-text: #FAFAFA;
+    --context-menu-bg: #141414;
+    --context-menu-border: #404040;
+    --context-menu-hover: #1F1F1F;
+    --shimmer-from: #141414;
+    --shimmer-via: #1F1F1F;
+    --shimmer-to: #141414;
+    --glass-bg: rgba(13, 13, 13, 0.92);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --surface-elevated: #141414;
+    --surface-overlay: #0D0D0D;
+    --focus-ring: rgba(255, 224, 52, 0.5);
+    --accent-glow: rgba(255, 224, 52, 0.2);
+    --accent-glow-lg: rgba(255, 224, 52, 0.1);
+  }
+
+  /* ─── Base Styles ─── */
   * {
     @apply border-border;
   }
+
+  html {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* Tabular numbers for coordinates / numeric displays */
+  .tabular-nums,
+  .font-mono {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+    font-feature-settings: 'tnum';
   }
 }
+
+/* ─── Custom Keyframes ─── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.7; transform: scale(1.02); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── Text editor input ─── */
+.text-editor-input {
+  caret-color: hsl(var(--primary));
+}
+.text-editor-input::selection {
+  background: hsl(var(--primary) / 0.25);
+}
+
+/* ─── Cursor states ─── */
+.cursor-select { cursor: move; }
+.cursor-select .konvajs-content { cursor: move; }

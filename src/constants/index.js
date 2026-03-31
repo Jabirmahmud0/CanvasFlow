@@ -129,6 +129,7 @@ export const TOOLS = {
   STAR: 'star',
   POLYGON: 'polygon',
   PAN: 'pan',
+  ERASER: 'eraser',
 };
 
 // Tool configurations
@@ -187,6 +188,12 @@ export const TOOL_CONFIG = {
     shortcut: 'H',
     cursor: 'grab',
   },
+  [TOOLS.ERASER]: {
+    name: 'Eraser',
+    icon: 'Eraser',
+    shortcut: 'E',
+    cursor: 'crosshair',
+  },
 };
 
 // Element Types
@@ -217,6 +224,7 @@ export const SHORTCUTS = {
   starTool: { key: 's' },
   polygonTool: { key: 'p' },
   panTool: { key: 'h' },
+  eraserTool: { key: 'e' },
   
   // Actions
   undo: { key: 'z', ctrl: true },
