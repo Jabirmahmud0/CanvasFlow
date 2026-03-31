@@ -3,6 +3,7 @@ import { Stage, Layer, Rect, Line as KonvaLine, Group, Text, Circle, Star, Regul
 import { useCanvasStore } from '@/store/useCanvasStore';
 import { TOOLS, COLORS, CANVAS, DEFAULT_PROPERTIES } from '@/constants';
 import { useGeometryWorker } from '@/hooks/useGeometryWorker';
+import { useTheme } from '@/hooks/useTheme';
 import Grid from './Grid';
 import CanvasElement from './CanvasElement';
 import TextEditor from './TextEditor';
@@ -132,6 +133,9 @@ const Canvas = ({ width, height }) => {
   const [smartGuides, setSmartGuides] = useState([]);
   const [textEditor, setTextEditor] = useState(null);
   const [drawingCurrent, setDrawingCurrent] = useState(null);
+
+  // Get theme for light/dark mode
+  const { theme } = useTheme();
 
   // Initialize geometry worker
   const { calculateSmartGuides: calculateSmartGuidesWorker, isReady: workerReady } = useGeometryWorker();
@@ -673,7 +677,7 @@ const Canvas = ({ width, height }) => {
             y={-100000}
             width={200000}
             height={200000}
-            fill={canvasBackground}
+            fill={theme === 'light' ? '#F8FAFC' : (theme === 'high-contrast' ? '#000000' : canvasBackground)}
           />
           
           {/* Grid */}

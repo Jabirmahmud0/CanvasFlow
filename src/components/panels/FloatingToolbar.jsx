@@ -142,14 +142,14 @@ const FloatingToolbar = () => {
           transition={{ type: 'spring', stiffness: 400, damping: 25 }}
           className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50"
         >
-          <div className="flex items-center gap-1 px-2 py-2 bg-slate-800/95 backdrop-blur-sm border border-slate-700 rounded-xl shadow-2xl shadow-black/50">
+          <div className="flex items-center gap-1 px-2 py-2 bg-popover/95 backdrop-blur-sm border border-border rounded-xl shadow-2xl shadow-black/50">
             {/* Clipboard */}
-            <div className="flex items-center gap-1 pr-2 border-r border-slate-700">
+            <div className="flex items-center gap-1 pr-2 border-r border-border">
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={copy}
-                className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
                 title="Copy (Ctrl+C)"
               >
                 <Copy size={18} />
@@ -158,7 +158,7 @@ const FloatingToolbar = () => {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={cut}
-                className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
                 title="Cut (Ctrl+X)"
               >
                 <Scissors size={18} />
@@ -170,8 +170,8 @@ const FloatingToolbar = () => {
                 disabled={!hasClipboard}
                 className={`p-2 rounded-lg transition-colors ${
                   hasClipboard 
-                    ? 'text-slate-400 hover:text-white hover:bg-slate-700' 
-                    : 'text-slate-600 cursor-not-allowed'
+                    ? 'text-muted-foreground hover:text-foreground hover:bg-accent' 
+                    : 'text-muted-foreground/30 cursor-not-allowed'
                 }`}
                 title="Paste (Ctrl+V)"
               >
@@ -180,12 +180,12 @@ const FloatingToolbar = () => {
             </div>
 
             {/* Layer Order */}
-            <div className="flex items-center gap-1 pr-2 border-r border-slate-700">
+            <div className="flex items-center gap-1 pr-2 border-r border-border">
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={bringToFront}
-                className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
                 title="Bring to Front (Ctrl+])"
               >
                 <ChevronUp size={18} />
@@ -194,7 +194,7 @@ const FloatingToolbar = () => {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={sendToBack}
-                className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
                 title="Send to Back (Ctrl+[)"
               >
                 <ChevronDown size={18} />
@@ -202,12 +202,12 @@ const FloatingToolbar = () => {
             </div>
 
             {/* Duplicate & Delete */}
-            <div className="flex items-center gap-1 pr-2 border-r border-slate-700">
+            <div className="flex items-center gap-1 pr-2 border-r border-border">
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={duplicateSelected}
-                className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
                 title="Duplicate (Ctrl+D)"
               >
                 <Layers size={18} />
@@ -230,7 +230,7 @@ const FloatingToolbar = () => {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => handleAlign('left')}
-                  className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
                   title="Align Left"
                 >
                   <AlignLeft size={18} />
@@ -239,7 +239,7 @@ const FloatingToolbar = () => {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => handleAlign('center')}
-                  className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
                   title="Align Center"
                 >
                   <AlignHorizontalJustifyCenter size={18} />
@@ -248,7 +248,7 @@ const FloatingToolbar = () => {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => handleAlign('right')}
-                  className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
                   title="Align Right"
                 >
                   <AlignRight size={18} />
@@ -257,7 +257,7 @@ const FloatingToolbar = () => {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => handleAlign('top')}
-                  className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
                   title="Align Top"
                 >
                   <AlignStartVertical size={18} />
@@ -266,7 +266,7 @@ const FloatingToolbar = () => {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => handleAlign('middle')}
-                  className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
                   title="Align Middle"
                 >
                   <AlignVerticalJustifyCenter size={18} />
@@ -275,7 +275,7 @@ const FloatingToolbar = () => {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => handleAlign('bottom')}
-                  className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
                   title="Align Bottom"
                 >
                   <AlignEndVertical size={18} />

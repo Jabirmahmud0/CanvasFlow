@@ -42,7 +42,7 @@ const ToolButton = ({ tool, activeTool, onClick, icon: Icon, label, shortcut }) 
       relative flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200
       ${activeTool === tool
         ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30'
-        : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
+        : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'
       }
     `}
     title={`${label} (${shortcut})`}
@@ -59,8 +59,8 @@ const ActionButton = ({ onClick, icon: Icon, label, disabled, shortcut, variant 
   const baseClasses = 'flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200';
   const variantClasses = {
     default: disabled
-      ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed'
-      : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white',
+      ? 'bg-muted/50 text-muted-foreground/50 cursor-not-allowed'
+      : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground',
     danger: disabled
       ? 'bg-red-500/10 text-red-600/50 cursor-not-allowed'
       : 'bg-red-500/10 text-red-400 hover:bg-red-500/20',
@@ -229,7 +229,7 @@ const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
     <motion.div
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="flex items-center justify-between px-4 py-3 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800"
+      className="flex items-center justify-between px-4 py-3 bg-card/95 backdrop-blur-sm border-b border-border"
       role="toolbar"
       aria-label="CanvasFlow main toolbar"
     >
@@ -239,7 +239,7 @@ const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
           <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/30">
             <Layers className="w-4 h-4 text-white" aria-hidden="true" />
           </div>
-          <span className="text-lg font-semibold text-white">CanvasFlow</span>
+          <span className="text-lg font-semibold text-foreground">CanvasFlow</span>
         </div>
 
         {/* File Menu */}
@@ -247,7 +247,7 @@ const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
           <button
             ref={fileMenuRef}
             onClick={toggleFileMenu}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-300 hover:text-white hover:bg-slate-800 rounded-md transition-colors"
+            className="flex items-center gap-1 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
             aria-label="File menu"
             aria-expanded={showFileMenu}
             aria-haspopup="menu"
@@ -263,12 +263,12 @@ const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   style={{ position: 'fixed', top: menuPositions.file.top, left: menuPositions.file.left }}
-                  className="w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-[9999] py-1"
+                  className="w-48 bg-popover border border-border rounded-lg shadow-xl z-[9999] py-1 text-popover-foreground"
                   role="menu"
                 >
                 <button
                   onClick={handleExport}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-foreground/80 hover:bg-accent hover:text-accent-foreground transition-colors"
                   role="menuitem"
                 >
                   <Download size={16} aria-hidden="true" />
@@ -276,7 +276,7 @@ const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
                 </button>
                 <button
                   onClick={handleImport}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-foreground/80 hover:bg-accent hover:text-accent-foreground transition-colors"
                   role="menuitem"
                 >
                   <Upload size={16} aria-hidden="true" />
@@ -284,13 +284,13 @@ const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
                 </button>
                 <button
                   onClick={handleLoadSamples}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-foreground/80 hover:bg-accent hover:text-accent-foreground transition-colors"
                   role="menuitem"
                 >
                   <FilePlus size={16} aria-hidden="true" />
                   Load Sample Data
                 </button>
-                <div className="border-t border-slate-700 my-1" role="separator" />
+                <div className="border-t border-border my-1" role="separator" />
                 <button
                   onClick={handleClear}
                   className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
@@ -310,7 +310,7 @@ const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
           <button
             ref={viewMenuRef}
             onClick={toggleViewMenu}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-300 hover:text-white hover:bg-slate-800 rounded-md transition-colors"
+            className="flex items-center gap-1 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
             aria-label="View menu"
             aria-expanded={showViewMenu}
             aria-haspopup="menu"
@@ -326,12 +326,12 @@ const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   style={{ position: 'fixed', top: menuPositions.view.top, left: menuPositions.view.left }}
-                  className="w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-[9999] py-1"
+                  className="w-48 bg-popover border border-border rounded-lg shadow-xl z-[9999] py-1 text-popover-foreground"
                   role="menu"
                 >
                 <button
                   onClick={() => { toggleGrid(); setShowViewMenu(false); }}
-                  className="w-full flex items-center justify-between px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                  className="w-full flex items-center justify-between px-4 py-2 text-sm text-foreground/80 hover:bg-accent hover:text-accent-foreground transition-colors"
                   role="menuitem"
                 >
                   <span className="flex items-center gap-3">
@@ -342,7 +342,7 @@ const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
                 </button>
                 <button
                   onClick={() => { toggleSnapToGrid(); setShowViewMenu(false); }}
-                  className="w-full flex items-center justify-between px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                  className="w-full flex items-center justify-between px-4 py-2 text-sm text-foreground/80 hover:bg-accent hover:text-accent-foreground transition-colors"
                   role="menuitem"
                 >
                   <span className="flex items-center gap-3">
@@ -353,7 +353,7 @@ const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
                 </button>
                 <button
                   onClick={() => { toggleSmartGuides(); setShowViewMenu(false); }}
-                  className="w-full flex items-center justify-between px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                  className="w-full flex items-center justify-between px-4 py-2 text-sm text-foreground/80 hover:bg-accent hover:text-accent-foreground transition-colors"
                   role="menuitem"
                 >
                   <span className="flex items-center gap-3">
@@ -362,10 +362,10 @@ const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
                   </span>
                   {showSmartGuides && <span className="text-indigo-400" aria-label="enabled">✓</span>}
                 </button>
-                <div className="border-t border-slate-700 my-1" role="separator" />
+                <div className="border-t border-border my-1" role="separator" />
                 <button
                   onClick={() => { centerCanvas(); setShowViewMenu(false); }}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-foreground/80 hover:bg-accent hover:text-accent-foreground transition-colors"
                   role="menuitem"
                 >
                   <Settings size={16} aria-hidden="true" />
@@ -379,7 +379,7 @@ const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
       </div>
 
       {/* Center - Tools */}
-      <div className="flex items-center gap-1 p-1.5 bg-slate-800/50 rounded-xl">
+      <div className="flex items-center gap-1 p-1.5 bg-muted/50 rounded-xl">
         {tools.map(({ tool, icon, label, shortcut }) => (
           <ToolButton
             key={tool}
@@ -396,7 +396,7 @@ const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
       {/* Right - Zoom & Actions */}
       <div className="flex items-center gap-3">
         {/* Zoom Controls */}
-        <div className="flex items-center gap-1 bg-slate-800/50 rounded-lg p-1" role="group" aria-label="Zoom controls">
+        <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1" role="group" aria-label="Zoom controls">
           <ActionButton
             onClick={zoomOut}
             icon={ZoomOut}
@@ -407,7 +407,7 @@ const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={resetZoom}
-            className="px-3 py-2 text-slate-300 hover:text-white transition-colors min-w-[70px] text-center"
+            className="px-3 py-2 text-muted-foreground hover:text-foreground transition-colors min-w-[70px] text-center"
             aria-label={`Reset zoom to 100%, current zoom is ${Math.round(zoom * 100)}%`}
           >
             <span className="text-sm font-medium tabular-nums">
@@ -422,14 +422,14 @@ const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
           />
         </div>
 
-        <div className="w-px h-8 bg-slate-700" role="separator" aria-hidden="true" />
+        <div className="w-px h-8 bg-border" role="separator" aria-hidden="true" />
         
         {/* Theme Menu */}
         <div className="relative">
           <button
             ref={themeMenuRef}
             onClick={toggleThemeMenu}
-            className="flex items-center justify-center p-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+            className="flex items-center justify-center p-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
             title="Theme Settings"
             aria-label="Theme settings"
           >
@@ -443,12 +443,12 @@ const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
                   style={{ position: 'fixed', top: menuPositions.theme.top, right: menuPositions.theme.right }}
-                  className="w-40 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-[9999] py-1"
+                  className="w-40 bg-popover border border-border rounded-lg shadow-xl z-[9999] py-1 text-popover-foreground"
                   role="menu"
                 >
                 <button
                   onClick={() => { setTheme('dark'); setShowThemeMenu(false); }}
-                  className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-colors ${theme === 'dark' ? 'text-indigo-400 bg-slate-700/50' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+                  className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-colors ${theme === 'dark' ? 'text-indigo-400 bg-accent/50' : 'text-foreground/80 hover:bg-accent hover:text-accent-foreground'}`}
                   role="menuitem"
                 >
                   <span className="flex items-center gap-2"><Moon size={14} /> Dark</span>
@@ -456,7 +456,7 @@ const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
                 </button>
                 <button
                   onClick={() => { setTheme('light'); setShowThemeMenu(false); }}
-                  className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-colors ${theme === 'light' ? 'text-indigo-400 bg-slate-700/50' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+                  className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-colors ${theme === 'light' ? 'text-indigo-400 bg-accent/50' : 'text-foreground/80 hover:bg-accent hover:text-accent-foreground'}`}
                   role="menuitem"
                 >
                   <span className="flex items-center gap-2"><Sun size={14} /> Light</span>
@@ -464,7 +464,7 @@ const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
                 </button>
                 <button
                   onClick={() => { setTheme('high-contrast'); setShowThemeMenu(false); }}
-                  className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-colors ${theme === 'high-contrast' ? 'text-indigo-400 bg-slate-700/50' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+                  className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-colors ${theme === 'high-contrast' ? 'text-indigo-400 bg-accent/50' : 'text-foreground/80 hover:bg-accent hover:text-accent-foreground'}`}
                   role="menuitem"
                 >
                   <span className="flex items-center gap-2"><Palette size={14} /> High Contrast</span>
@@ -476,7 +476,7 @@ const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
           </AnimatePresence>
         </div>
 
-        <div className="w-px h-8 bg-slate-700" role="separator" aria-hidden="true" />
+        <div className="w-px h-8 bg-border" role="separator" aria-hidden="true" />
 
         {/* Undo/Redo */}
         <div className="flex items-center gap-1" role="group" aria-label="History controls">

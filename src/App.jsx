@@ -25,12 +25,12 @@ const ContextMenu = ({ x, y, onClose, items }) => {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       style={{ left: x, top: y }}
-      className="fixed z-50 min-w-[160px] bg-slate-800 border border-slate-700 rounded-lg shadow-xl py-1"
+      className="fixed z-50 min-w-[160px] bg-popover border border-border rounded-lg shadow-xl py-1 text-popover-foreground"
     >
       {items.map((item, index) => (
         <React.Fragment key={index}>
           {item.divider ? (
-            <div className="border-t border-slate-700 my-1" />
+            <div className="border-t border-border my-1" />
           ) : (
             <button
               onClick={() => { item.onClick(); onClose(); }}
@@ -38,8 +38,8 @@ const ContextMenu = ({ x, y, onClose, items }) => {
               className={`
                 w-full flex items-center justify-between px-4 py-2 text-sm transition-colors
                 ${item.disabled 
-                  ? 'text-slate-600 cursor-not-allowed' 
-                  : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                  ? 'text-muted-foreground/50 cursor-not-allowed' 
+                  : 'text-foreground/80 hover:bg-accent hover:text-accent-foreground'
                 }
                 ${item.danger ? 'text-red-400 hover:bg-red-500/10' : ''}
               `}
@@ -49,7 +49,7 @@ const ContextMenu = ({ x, y, onClose, items }) => {
                 {item.label}
               </span>
               {item.shortcut && (
-                <span className="text-xs text-slate-500">{item.shortcut}</span>
+                <span className="text-xs text-muted-foreground">{item.shortcut}</span>
               )}
             </button>
           )}
@@ -67,10 +67,10 @@ const Toast = ({ message, type = 'info', onClose }) => {
   }, [onClose]);
 
   const colors = {
-    info: 'bg-slate-800 border-slate-700 text-slate-200',
-    success: 'bg-green-500/20 border-green-500/50 text-green-400',
-    error: 'bg-red-500/20 border-red-500/50 text-red-400',
-    warning: 'bg-amber-500/20 border-amber-500/50 text-amber-400',
+    info: 'bg-secondary border-border text-secondary-foreground',
+    success: 'bg-green-500/20 border-green-500/50 text-green-600 dark:text-green-400',
+    error: 'bg-red-500/20 border-red-500/50 text-red-600 dark:text-red-400',
+    warning: 'bg-amber-500/20 border-amber-500/50 text-amber-600 dark:text-amber-400',
   };
 
   return (
@@ -471,7 +471,7 @@ function App() {
 
   return (
     <div 
-      className="h-screen w-screen bg-slate-950 flex flex-col overflow-hidden"
+      className="h-screen w-screen bg-background text-foreground flex flex-col overflow-hidden"
       onContextMenu={handleContextMenu}
     >
       {/* Top Toolbar */}
@@ -499,14 +499,14 @@ function App() {
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar - Layers & Assets */}
-        <Suspense fallback={<div className="w-72 bg-slate-900/95 backdrop-blur-sm border-r border-slate-800 flex flex-col relative z-10" />}>
+        <Suspense fallback={<div className="w-72 bg-card/95 backdrop-blur-sm border-r border-border flex flex-col relative z-10" />}>
           <LeftSidebar />
         </Suspense>
 
         {/* Canvas Area */}
         <div 
           ref={canvasContainerRef}
-          className="flex-1 relative bg-slate-900 overflow-hidden"
+          className="flex-1 relative bg-muted/20 overflow-hidden"
         >
           <Canvas 
             width={canvasSize.width} 
@@ -522,15 +522,15 @@ function App() {
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="absolute bottom-0 left-0 right-0 h-8 bg-slate-900/95 backdrop-blur-sm border-t border-slate-800 flex items-center justify-between px-4 text-xs text-slate-500"
+            className="absolute bottom-0 left-0 right-0 h-8 bg-card/95 backdrop-blur-sm border-t border-border flex items-center justify-between px-4 text-xs text-muted-foreground"
           >
             <div className="flex items-center gap-4">
-              <span className="font-medium text-slate-400">CanvasFlow</span>
-              <span className="text-slate-700">|</span>
+              <span className="font-medium text-foreground/70">CanvasFlow</span>
+              <span className="text-border">|</span>
               <span>{elements.length} elements</span>
               {selectedIds.length > 0 && (
                 <>
-                  <span className="text-slate-700">|</span>
+                  <span className="text-border">|</span>
                   <span className="text-indigo-400">{selectedIds.length} selected</span>
                 </>
               )}
@@ -538,10 +538,10 @@ function App() {
             <div className="flex items-center gap-4">
               <span>Hold Space to Pan</span>
               <span>Scroll to Zoom</span>
-              <span className="text-slate-700">|</span>
+              <span className="text-border">|</span>
               <button
                 onClick={() => setShowShortcuts(true)}
-                className="hover:text-slate-300 transition-colors"
+                className="hover:text-foreground transition-colors"
               >
                 Press ? for shortcuts
               </button>
@@ -550,7 +550,7 @@ function App() {
         </div>
 
         {/* Right Panel - Properties */}
-        <Suspense fallback={<div className="w-72 bg-slate-900/95 backdrop-blur-sm border-l border-slate-800" />}>
+        <Suspense fallback={<div className="w-72 bg-card/95 backdrop-blur-sm border-l border-border" />}>
           <PropertiesPanel />
         </Suspense>
       </div>
@@ -592,14 +592,14 @@ function App() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-3xl w-full mx-4 max-h-[80vh] overflow-auto"
+              className="bg-card border border-border rounded-2xl shadow-2xl max-w-3xl w-full mx-4 max-h-[80vh] overflow-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+              <div className="p-6 border-b border-border flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-white">Keyboard Shortcuts</h2>
                 <button
                   onClick={() => setShowShortcuts(false)}
-                  className="text-slate-400 hover:text-white transition-colors"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
                 >
                   ✕
                 </button>
@@ -607,14 +607,14 @@ function App() {
               <div className="p-6 grid grid-cols-2 gap-8">
                 {shortcutsList.map((category) => (
                   <div key={category.category}>
-                    <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4">
+                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
                       {category.category}
                     </h3>
                     <div className="space-y-2">
                       {category.shortcuts.map((shortcut) => (
                         <div key={shortcut.key} className="flex items-center justify-between">
-                          <span className="text-slate-300">{shortcut.action}</span>
-                          <kbd className="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs text-slate-400 font-mono">
+                          <span className="text-foreground/80">{shortcut.action}</span>
+                          <kbd className="px-2 py-1 bg-muted border border-border rounded text-xs text-muted-foreground font-mono">
                             {shortcut.key}
                           </kbd>
                         </div>

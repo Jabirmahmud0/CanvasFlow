@@ -23,10 +23,10 @@ const PropertyGroup = ({ title, icon: Icon, children, defaultOpen = true }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   
   return (
-    <div className="mb-2 border-b border-slate-800/50 last:border-0">
+    <div className="mb-2 border-b border-border/50 last:border-0">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider hover:bg-slate-800/30 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:bg-accent/30 transition-colors"
       >
         <span className="flex items-center gap-2">
           <Icon size={14} />
@@ -55,7 +55,7 @@ const PropertyGroup = ({ title, icon: Icon, children, defaultOpen = true }) => {
 
 const PropertyRow = ({ label, children, tooltip }) => (
   <div className="flex items-center justify-between gap-4" title={tooltip}>
-    <span className="text-sm text-slate-400">{label}</span>
+    <span className="text-sm text-muted-foreground">{label}</span>
     <div className="flex items-center gap-2">
       {children}
     </div>
@@ -72,9 +72,9 @@ const NumberInput = ({ value, onChange, min, max, step = 1, suffix }) => (
       max={max}
       step={step}
       placeholder={value === 'mixed' ? '—' : ''}
-      className="w-20 px-2 py-1.5 bg-slate-800 border border-slate-700 rounded-md text-sm text-slate-200 focus:outline-none focus:border-indigo-500 tabular-nums transition-colors"
+      className="w-20 px-2 py-1.5 bg-muted border border-border rounded-md text-sm text-foreground focus:outline-none focus:border-indigo-500 tabular-nums transition-colors"
     />
-    {suffix && <span className="text-xs text-slate-500">{suffix}</span>}
+    {suffix && <span className="text-xs text-muted-foreground/50">{suffix}</span>}
   </div>
 );
 
@@ -86,7 +86,7 @@ const ColorInput = ({ value, onChange, showPresets = true }) => {
       <div className="flex items-center gap-2">
         <button
           onClick={() => setShowPicker(!showPicker)}
-          className="w-8 h-8 rounded-lg border border-slate-600 overflow-hidden"
+          className="w-8 h-8 rounded-lg border border-border overflow-hidden"
           style={{ background: value?.startsWith('linear') ? value : value || '#6366F1' }}
         />
         <input
@@ -94,7 +94,7 @@ const ColorInput = ({ value, onChange, showPresets = true }) => {
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
           placeholder="#6366F1"
-          className="w-24 px-2 py-1.5 bg-slate-800 border border-slate-700 rounded-md text-sm text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
+          className="w-24 px-2 py-1.5 bg-muted border border-border rounded-md text-sm text-foreground focus:outline-none focus:border-indigo-500 font-mono"
         />
       </div>
       
@@ -102,7 +102,7 @@ const ColorInput = ({ value, onChange, showPresets = true }) => {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute top-full left-0 mt-2 p-3 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 w-56"
+          className="absolute top-full left-0 mt-2 p-3 bg-popover border border-border rounded-lg shadow-xl z-50 w-56"
         >
           <div className="grid grid-cols-8 gap-1 mb-2">
             {PRESET_COLORS.map((color) => (
@@ -114,8 +114,8 @@ const ColorInput = ({ value, onChange, showPresets = true }) => {
               />
             ))}
           </div>
-          <div className="border-t border-slate-700 pt-2">
-            <span className="text-xs text-slate-500 mb-1 block">Gradients</span>
+          <div className="border-t border-border pt-2">
+            <span className="text-xs text-muted-foreground/50 mb-1 block">Gradients</span>
             <div className="space-y-1">
               {GRADIENT_PRESETS.map((gradient, i) => (
                 <button
@@ -140,7 +140,7 @@ const ToggleButton = ({ active, onClick, icon: Icon, label }) => (
       flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors
       ${active
         ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/50'
-        : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+        : 'bg-muted text-muted-foreground hover:bg-accent'
       }
     `}
     aria-pressed={active}
@@ -196,18 +196,18 @@ const PropertiesPanel = () => {
       <motion.div
         initial={{ x: 20, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
-        className="w-80 bg-slate-900/95 backdrop-blur-sm border-l border-slate-800 flex flex-col"
+        className="w-80 bg-sidebar/95 backdrop-blur-sm border-l border-border flex flex-col"
         role="complementary"
         aria-label="Properties panel"
       >
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-800">
-          <Settings2 className="w-4 h-4 text-slate-400" aria-hidden="true" />
-          <span className="text-sm font-medium text-slate-200">Properties</span>
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
+          <Settings2 className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+          <span className="text-sm font-medium text-foreground">Properties</span>
         </div>
-        <div className="flex-1 flex flex-col items-center justify-center text-slate-500">
+        <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
           <Settings2 className="w-12 h-12 mb-3 opacity-30" aria-hidden="true" />
           <span className="text-sm">No selection</span>
-          <span className="text-xs mt-1 text-slate-600">Select an element to edit properties</span>
+          <span className="text-xs mt-1 text-muted-foreground/50">Select an element to edit properties</span>
         </div>
       </motion.div>
     );
@@ -221,27 +221,27 @@ const PropertiesPanel = () => {
     <motion.div
       initial={{ x: 20, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      className="w-80 bg-slate-900/95 backdrop-blur-sm border-l border-slate-800 flex flex-col overflow-hidden"
+      className="w-80 bg-sidebar/95 backdrop-blur-sm border-l border-border flex flex-col overflow-hidden"
       role="complementary"
       aria-label="Properties panel"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2">
-          <Settings2 className="w-4 h-4 text-slate-400" aria-hidden="true" />
-          <span className="text-sm font-medium text-slate-200">
+          <Settings2 className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+          <span className="text-sm font-medium text-foreground">
             {multiSelection ? `${selectedElements.length} items selected` : 'Properties'}
           </span>
         </div>
         {singleSelection && (
-          <span className="text-xs text-slate-500 capitalize px-2 py-1 bg-slate-800 rounded">
+          <span className="text-xs text-muted-foreground capitalize px-2 py-1 bg-muted rounded">
             {element.type}
           </span>
         )}
       </div>
 
       {/* Quick Actions */}
-      <div className="flex gap-2 px-4 py-2 border-b border-slate-800">
+      <div className="flex gap-2 px-4 py-2 border-b border-border">
         <ToggleButton
           active={isVisible}
           onClick={handleToggleVisibility}
@@ -400,7 +400,7 @@ const PropertiesPanel = () => {
                 <textarea
                   value={element.text}
                   onChange={(e) => handleUpdate('text', e.target.value)}
-                  className="w-32 px-2 py-1.5 bg-slate-800 border border-slate-700 rounded-md text-sm text-slate-200 focus:outline-none focus:border-indigo-500 resize-none"
+                  className="w-32 px-2 py-1.5 bg-muted border border-border rounded-md text-sm text-foreground focus:outline-none focus:border-indigo-500 resize-none"
                   rows={2}
                 />
               </PropertyRow>
@@ -415,7 +415,7 @@ const PropertiesPanel = () => {
                 <select
                   value={element.fontWeight || 'normal'}
                   onChange={(e) => handleUpdate('fontWeight', e.target.value)}
-                  className="w-24 px-2 py-1.5 bg-slate-800 border border-slate-700 rounded-md text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+                  className="w-24 px-2 py-1.5 bg-muted border border-border rounded-md text-sm text-foreground focus:outline-none focus:border-indigo-500"
                 >
                   <option value="normal">Normal</option>
                   <option value="bold">Bold</option>
@@ -458,23 +458,23 @@ const PropertiesPanel = () => {
           {singleSelection && (
             <PropertyGroup title="Layer Info" icon={Hash} defaultOpen={false}>
               <PropertyRow label="ID">
-                <span className="text-xs text-slate-500 font-mono truncate max-w-[140px]">
+                <span className="text-xs text-muted-foreground/50 font-mono truncate max-w-[140px]">
                   {element.id}
                 </span>
               </PropertyRow>
               <PropertyRow label="Type">
-                <span className="text-xs text-slate-500 capitalize">
+                <span className="text-xs text-muted-foreground/50 capitalize">
                   {element.type}
                 </span>
               </PropertyRow>
               <PropertyRow label="Created">
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-muted-foreground/50">
                   {new Date(element.createdAt).toLocaleString()}
                 </span>
               </PropertyRow>
               {element.updatedAt && (
                 <PropertyRow label="Modified">
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-muted-foreground/50">
                     {new Date(element.updatedAt).toLocaleString()}
                   </span>
                 </PropertyRow>

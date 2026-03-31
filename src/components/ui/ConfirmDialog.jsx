@@ -4,7 +4,7 @@ const ConfirmDialog = ({ title, message, onConfirm, onCancel, type = 'warning' }
   const buttons = {
     warning: {
       confirm: 'bg-red-500 hover:bg-red-600 text-white',
-      cancel: 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+      cancel: 'bg-muted hover:bg-accent text-muted-foreground'
     },
     info: {
       confirm: 'bg-indigo-500 hover:bg-indigo-600 text-white',
@@ -24,14 +24,14 @@ const ConfirmDialog = ({ title, message, onConfirm, onCancel, type = 'warning' }
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
-        className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden"
+        className="bg-background border border-border rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-slate-800">
-          <h2 className="text-xl font-semibold text-white">{title}</h2>
+        <div className="p-6 border-b border-border">
+          <h2 className="text-xl font-semibold text-foreground">{title}</h2>
         </div>
         <div className="p-6">
-          <p className="text-slate-300 mb-6">{message}</p>
+          <p className="text-muted-foreground mb-6">{message}</p>
           <div className="flex gap-3 justify-end">
             <button
               onClick={onCancel}

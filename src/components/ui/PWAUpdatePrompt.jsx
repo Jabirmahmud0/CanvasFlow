@@ -76,7 +76,7 @@ export function PWAUpdatePrompt() {
 
   return (
     <div className="fixed bottom-4 right-4 z-50 max-w-sm animate-in slide-in-from-bottom-4 fade-in">
-      <div className="bg-slate-800 border border-slate-700 rounded-xl shadow-2xl p-4">
+      <div className="bg-card border border-border rounded-xl shadow-2xl p-4">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
             <svg
@@ -94,10 +94,10 @@ export function PWAUpdatePrompt() {
             </svg>
           </div>
           <div className="flex-1">
-            <h3 className="text-sm font-semibold text-white">
+            <h3 className="text-sm font-semibold text-foreground">
               {offlineReady ? 'App Ready for Offline Use' : 'Update Available'}
             </h3>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               {offlineReady
                 ? 'CanvasFlow can now work without an internet connection.'
                 : 'A new version of CanvasFlow is available. Update now for the latest features.'}
@@ -113,7 +113,7 @@ export function PWAUpdatePrompt() {
                   </button>
                   <button
                     onClick={handleDismiss}
-                    className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-medium rounded-lg transition-colors"
+                    className="px-3 py-1.5 bg-muted hover:bg-accent text-muted-foreground text-xs font-medium rounded-lg transition-colors"
                   >
                     Later
                   </button>
@@ -126,7 +126,7 @@ export function PWAUpdatePrompt() {
               setOfflineReady(false);
               setShowUpdate(false);
             }}
-            className="text-slate-500 hover:text-slate-300 transition-colors"
+            className="text-muted-foreground/50 hover:text-foreground transition-colors"
             aria-label="Close"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -60,14 +60,13 @@ const LayerItem = ({
       onClick={onClick}
       className={`
         group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all duration-200
-        ${isSelected 
           ? 'bg-indigo-500/20 border border-indigo-500/50' 
-          : 'hover:bg-slate-800/50 border border-transparent'
+          : 'hover:bg-accent/50 border border-transparent'
         }
       `}
     >
       {/* Drag Handle */}
-      <GripVertical size={14} className="text-slate-600 cursor-grab active:cursor-grabbing" />
+      <GripVertical size={14} className="text-muted-foreground/50 cursor-grab active:cursor-grabbing" />
 
       {/* Icon */}
       <div 
@@ -79,10 +78,10 @@ const LayerItem = ({
 
       {/* Name */}
       <div className="flex-1 min-w-0">
-        <span className="text-sm text-slate-300 truncate block">
+        <span className="text-sm text-foreground truncate block">
           {element.type.charAt(0).toUpperCase() + element.type.slice(1)} {index + 1}
         </span>
-        <span className="text-xs text-slate-600">
+        <span className="text-xs text-muted-foreground/70">
           {Math.round(element.x)}, {Math.round(element.y)}
         </span>
       </div>
@@ -94,7 +93,7 @@ const LayerItem = ({
             e.stopPropagation();
             onToggleVisibility();
           }}
-          className={`p-1.5 rounded hover:bg-slate-700 transition-colors ${isVisible ? 'text-slate-400' : 'text-slate-600'}`}
+          className={`p-1.5 rounded hover:bg-accent transition-colors ${isVisible ? 'text-muted-foreground' : 'text-muted-foreground/50'}`}
           title={isVisible ? 'Hide' : 'Show'}
         >
           {isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
@@ -104,7 +103,7 @@ const LayerItem = ({
             e.stopPropagation();
             onToggleLock();
           }}
-          className={`p-1.5 rounded hover:bg-slate-700 transition-colors ${isLocked ? 'text-amber-400' : 'text-slate-400'}`}
+          className={`p-1.5 rounded hover:bg-accent transition-colors ${isLocked ? 'text-amber-400' : 'text-muted-foreground'}`}
           title={isLocked ? 'Unlock' : 'Lock'}
         >
           {isLocked ? <Lock size={14} /> : <Unlock size={14} />}
@@ -163,37 +162,37 @@ const LayersPanel = ({ isEmbedded = false }) => {
     <motion.div
       initial={isEmbedded ? false : { x: -20, opacity: 0 }}
       animate={isEmbedded ? false : { x: 0, opacity: 1 }}
-      className={`flex flex-col h-full bg-slate-900/95 ${
-        !isEmbedded ? 'w-72 backdrop-blur-sm border-r border-slate-800' : ''
+      className={`flex flex-col h-full bg-card/95 ${
+        !isEmbedded ? 'w-72 backdrop-blur-sm border-r border-border' : ''
       }`}
       role={isEmbedded ? 'region' : 'complementary'}
       aria-label="Layers panel"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2">
-          <Layers className="w-4 h-4 text-slate-400" aria-hidden="true" />
-          <span className="text-sm font-medium text-slate-200">Layers</span>
+          <Layers className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+          <span className="text-sm font-medium text-foreground">Layers</span>
         </div>
-        <span className="text-xs text-slate-500" aria-live="polite">{elements.length} items</span>
+        <span className="text-xs text-muted-foreground/70" aria-live="polite">{elements.length} items</span>
       </div>
 
       {/* Search */}
-      <div className="px-4 py-2 border-b border-slate-800">
+      <div className="px-4 py-2 border-b border-border">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" aria-hidden="true" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
           <input
             type="text"
             placeholder="Search layers..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-8 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+            className="w-full pl-9 pr-8 py-2 bg-muted border border-border rounded-lg text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-indigo-500 transition-colors"
             aria-label="Search layers"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               aria-label="Clear search"
             >
               <X size={14} />
@@ -226,12 +225,12 @@ const LayersPanel = ({ isEmbedded = false }) => {
             }}
           />
         ) : (
-          <div className="flex flex-col items-center justify-center py-8 text-slate-500">
+          <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
             <Layers className="w-8 h-8 mb-2 opacity-50" aria-hidden="true" />
             <span className="text-sm">
               {searchQuery ? 'No matching layers' : 'No layers yet'}
             </span>
-            <span className="text-xs mt-1 text-slate-600">
+            <span className="text-xs mt-1 text-muted-foreground/50">
               {searchQuery ? 'Try a different search' : 'Create shapes to get started'}
             </span>
           </div>
@@ -243,13 +242,13 @@ const LayersPanel = ({ isEmbedded = false }) => {
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="p-3 border-t border-slate-800 space-y-2"
+          className="p-3 border-t border-border space-y-2"
         >
           {/* Layer Order */}
           <div className="flex gap-1">
             <button
               onClick={bringToFront}
-              className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-slate-800 text-slate-300 rounded-md hover:bg-slate-700 transition-colors text-xs"
+              className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-muted text-muted-foreground rounded-md hover:bg-accent transition-colors text-xs"
               title="Bring to Front (Ctrl+])"
             >
               <ChevronUp size={12} />
@@ -257,7 +256,7 @@ const LayersPanel = ({ isEmbedded = false }) => {
             </button>
             <button
               onClick={bringForward}
-              className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-slate-800 text-slate-300 rounded-md hover:bg-slate-700 transition-colors text-xs"
+              className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-muted text-muted-foreground rounded-md hover:bg-accent transition-colors text-xs"
               title="Bring Forward (Ctrl+Shift+])"
             >
               <ChevronUp size={12} />
@@ -265,7 +264,7 @@ const LayersPanel = ({ isEmbedded = false }) => {
             </button>
             <button
               onClick={sendBackward}
-              className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-slate-800 text-slate-300 rounded-md hover:bg-slate-700 transition-colors text-xs"
+              className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-muted text-muted-foreground rounded-md hover:bg-accent transition-colors text-xs"
               title="Send Backward (Ctrl+Shift+[)"
             >
               <ChevronDown size={12} />
@@ -273,7 +272,7 @@ const LayersPanel = ({ isEmbedded = false }) => {
             </button>
             <button
               onClick={sendToBack}
-              className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-slate-800 text-slate-300 rounded-md hover:bg-slate-700 transition-colors text-xs"
+              className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-muted text-muted-foreground rounded-md hover:bg-accent transition-colors text-xs"
               title="Send to Back (Ctrl+[)"
             >
               <ChevronDown size={12} />
@@ -285,7 +284,7 @@ const LayersPanel = ({ isEmbedded = false }) => {
           <div className="flex gap-2">
             <button
               onClick={duplicateSelected}
-              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-slate-800 text-slate-300 rounded-md hover:bg-slate-700 transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-muted text-muted-foreground rounded-md hover:bg-accent transition-colors"
             >
               <Copy size={14} />
               <span className="text-xs">Duplicate</span>

@@ -1,9 +1,12 @@
 import React from 'react';
 import { Rect, Line, Group } from 'react-konva';
 import { COLORS } from '@/constants';
+import { useTheme } from '@/hooks/useTheme';
 
 const SelectionBox = ({ bounds, zoom }) => {
   if (!bounds) return null;
+  
+  const { theme } = useTheme();
 
   const { x, y, width, height } = bounds;
   const handleSize = 8 / zoom;
@@ -20,6 +23,8 @@ const SelectionBox = ({ bounds, zoom }) => {
     { x: x - halfHandle, y: y + height - halfHandle }, // bottom-left
     { x: x - halfHandle, y: y + height / 2 - halfHandle }, // middle-left
   ];
+  
+  const boxBg = theme === 'light' ? '#F8FAFC' : (theme === 'high-contrast' ? '#000000' : COLORS.canvasBg);
 
   return (
     <Group>
@@ -43,7 +48,7 @@ const SelectionBox = ({ bounds, zoom }) => {
           y={handle.y}
           width={handleSize}
           height={handleSize}
-          fill={COLORS.canvasBg}
+          fill={boxBg}
           stroke={COLORS.selectionBorder}
           strokeWidth={1 / zoom}
         />

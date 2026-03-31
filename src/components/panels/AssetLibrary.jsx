@@ -65,21 +65,21 @@ const AssetLibrary = () => {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Search */}
-      <div className="px-4 py-3 border-b border-slate-800">
+      <div className="px-4 py-3 border-b border-border">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
           <input
             type="text"
             placeholder="Search assets..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+            className="w-full pl-9 pr-4 py-2 bg-muted border border-border rounded-lg text-sm text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-indigo-500 transition-colors"
           />
         </div>
       </div>
 
       {/* Categories */}
-      <div className="flex gap-2 px-4 py-2 overflow-x-auto no-scrollbar border-b border-slate-800 shrink-0">
+      <div className="flex gap-2 px-4 py-2 overflow-x-auto no-scrollbar border-b border-border shrink-0">
         {ASSET_CATEGORIES.map(category => (
           <button
             key={category.id}
@@ -87,7 +87,7 @@ const AssetLibrary = () => {
             className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
               activeCategory === category.id
                 ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/50'
-                : 'bg-slate-800 text-slate-400 border border-transparent hover:bg-slate-700'
+                : 'bg-muted text-muted-foreground border border-transparent hover:bg-accent'
             }`}
           >
             {category.label}
@@ -108,24 +108,24 @@ const AssetLibrary = () => {
                   onDragStart={(e) => handleDragStart(e, asset)}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-3 flex flex-col items-center gap-2 cursor-grab active:cursor-grabbing hover:bg-slate-700/50 hover:border-slate-600 transition-colors"
+                  className="bg-muted/50 border border-border/50 rounded-lg p-3 flex flex-col items-center gap-2 cursor-grab active:cursor-grabbing hover:bg-accent/50 hover:border-border transition-colors"
                 >
-                  <div className="w-10 h-10 rounded-md bg-slate-800 flex items-center justify-center text-slate-300">
+                  <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center text-foreground">
                     <Icon size={20} />
                   </div>
-                  <span className="text-xs text-slate-400 text-center select-none">{asset.label}</span>
+                  <span className="text-xs text-muted-foreground text-center select-none">{asset.label}</span>
                 </motion.div>
               );
             })}
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-slate-500 py-8">
+          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground py-8">
             <Image className="w-8 h-8 mb-2 opacity-50" />
             <span className="text-sm">No assets found</span>
           </div>
         )}
         
-        <div className="mt-8 text-center text-xs text-slate-500">
+        <div className="mt-8 text-center text-xs text-muted-foreground/50">
           <p>Drag items onto the canvas</p>
         </div>
       </div>

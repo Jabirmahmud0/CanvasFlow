@@ -35,7 +35,7 @@ const initialState = {
   transformInitial: {},
   
   // UI State
-  showGrid: true,
+  showGrid: false,
   snapToGrid: true,
   showSmartGuides: true,
   canvasBackground: '#0F172A',
