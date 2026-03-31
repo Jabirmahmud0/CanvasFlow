@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { subscribeWithSelector } from 'zustand/middleware';
+import { subscribeWithSelector, persist } from 'zustand/middleware';
 import { CANVAS, TOOLS, HISTORY, ELEMENT_TYPES } from '@/constants';
 
 // Generate unique ID
@@ -59,10 +59,12 @@ const initialState = {
   defaultStrokeWidth: 2,
 };
 
-// Create store with selector subscription
+// Create store with selector subscription and persistence
 export const useCanvasStore = create(
-  subscribeWithSelector((set, get) => ({
-    ...initialState,
+  subscribeWithSelector(
+    persist(
+      (set, get) => ({
+        ...initialState,
 
     // ============ View Actions ============
     
@@ -668,8 +670,11 @@ export const useCanvasStore = create(
       return guides;
     },
 
-    // Initialize with empty canvas (default)
+    // Initialize with empty canvas (only if no existing elements)
     initialize: () => {
+      const { elements } = get();
+      if (elements && elements.length > 0) return;
+
       set({
         elements: [],
         selectedIds: [],
@@ -934,8 +939,25 @@ export const useCanvasStore = create(
         history: [{ elements: deepClone(sampleElements), timestamp: Date.now() }],
         historyIndex: 0,
       }));
-    },
-  }))
+      },
+    }),
+    {
+      name: 'canvas-flow-storage',
+      partialize: (state) => ({
+        elements: state.elements,
+        zoom: state.zoom,
+        offset: state.offset,
+        canvasBackground: state.canvasBackground,
+        showGrid: state.showGrid,
+        snapToGrid: state.snapToGrid,
+        showSmartGuides: state.showSmartGuides,
+        groups: state.groups,
+        history: state.history,
+        historyIndex: state.historyIndex,
+      }),
+    }
+  )
+)
 );
 
 // Selectors for better performance

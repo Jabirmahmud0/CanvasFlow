@@ -694,12 +694,16 @@ const Canvas = ({ width, height }) => {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        className={activeTool === TOOLS.SELECT ? 'cursor-select' : ''}
+        className={`canvas-stage ${
+          activeTool === TOOLS.SELECT ? 'cursor-select' : 
+          activeTool === TOOLS.ERASER ? 'cursor-eraser' : ''
+        }`}
         style={{
           cursor: activeTool === TOOLS.PAN || isPanning ? 'grab' :
                   activeTool === TOOLS.SELECT ? 'move' :
                   activeTool === TOOLS.TEXT ? 'text' :
-                  [TOOLS.RECTANGLE, TOOLS.CIRCLE, TOOLS.LINE, TOOLS.ARROW, TOOLS.STAR, TOOLS.POLYGON].includes(activeTool) ? 'crosshair' : 'default'
+                  [TOOLS.RECTANGLE, TOOLS.CIRCLE, TOOLS.LINE, TOOLS.ARROW, TOOLS.STAR, TOOLS.POLYGON].includes(activeTool) ? 'crosshair' : 
+                  activeTool === TOOLS.ERASER ? 'none' : 'default'
         }}
       >
         <Layer>
@@ -737,6 +741,7 @@ const Canvas = ({ width, height }) => {
             <CanvasElement
               key={element.id}
               element={element}
+              isEraserActive={activeTool === TOOLS.ERASER}
               isSelected={selectedIds.includes(element.id)}
               onClick={handleElementClick}
               onDoubleClick={handleElementDoubleClick}
