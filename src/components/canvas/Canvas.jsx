@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Stage, Layer, Rect, Line as KonvaLine, Group, Text, Circle, Star, RegularPolygon } from 'react-konva';
 import { useCanvasStore } from '@/store/useCanvasStore';
-import { TOOLS, COLORS, CANVAS, DEFAULT_PROPERTIES } from '@/constants';
+import { TOOLS, COLORS, CANVAS, DEFAULT_PROPERTIES, ELEMENT_TYPES } from '@/constants';
 import { useGeometryWorker } from '@/hooks/useGeometryWorker';
 import { useTheme } from '@/hooks/useTheme';
 import Grid from './Grid';
@@ -152,6 +152,7 @@ const Canvas = ({ width, height }) => {
     isDrawing,
     drawingStart,
     drawingShape,
+    drawingSettings,
     showGrid,
     snapToGrid,
     showSmartGuides,
@@ -266,6 +267,16 @@ const Canvas = ({ width, height }) => {
       return;
     }
 
+    // Freehand drawing (Pen/Brush)
+    if (activeTool === TOOLS.PEN || activeTool === TOOLS.BRUSH) {
+      setDrawingCurrent({
+        x: worldPos.x,
+        y: worldPos.y,
+        points: [0, 0, 0, 0],
+      });
+      return;
+    }
+
     // Text tool - create text immediately
     if (activeTool === TOOLS.TEXT) {
       const newElement = {
@@ -305,7 +316,7 @@ const Canvas = ({ width, height }) => {
     if (e.target === stage) {
       // Only clear selection if not holding Shift (multi-select)
       // Don't clear if we're about to start drawing
-      if (!e.evt.shiftKey && !isDrawing) {
+      if (!e.evt.shiftKey && !isDrawing && activeTool !== TOOLS.PEN && activeTool !== TOOLS.BRUSH) {
         clearSelection();
       }
 
@@ -355,6 +366,14 @@ const Canvas = ({ width, height }) => {
       return;
     }
 
+    // Freehand drawing movement — functional update avoids stale closure over points array
+    if (drawingCurrent && (activeTool === TOOLS.PEN || activeTool === TOOLS.BRUSH)) {
+      setDrawingCurrent((prev) =>
+        prev ? { ...prev, points: [...prev.points, worldPos.x - prev.x, worldPos.y - prev.y] } : prev
+      );
+      return;
+    }
+
     // Drawing - update current position for preview
     if (isDrawing && drawingStart) {
       setDrawingCurrent(worldPos);
@@ -382,7 +401,7 @@ const Canvas = ({ width, height }) => {
         height,
       });
     }
-  }, [isPanning, panStart, isDrawing, drawingStart, selectionRect, screenToWorld, pan, activeTool, lassoPoints]);
+  }, [isPanning, panStart, isDrawing, drawingStart, selectionRect, screenToWorld, pan, activeTool, lassoPoints, drawingCurrent]);
 
   // Handle mouse up
   const handleMouseUp = useCallback((e) => {
@@ -417,16 +436,20 @@ const Canvas = ({ width, height }) => {
 
         const batchSelect = [];
         elements.forEach((el) => {
-          const elCenter = {
-            x: el.x + (el.width || (el.radius * 2) || 0) / 2,
-            y: el.y + (el.height || (el.radius * 2) || 0) / 2
-          };
+          let elCenter = { x: el.x, y: el.y };
           
-          // Adjust center for shapes that are center-referenced
-          if (el.type === 'circle' || el.type === 'star' || el.type === 'polygon') {
-            elCenter.x = el.x;
-            elCenter.y = el.y;
+          // Calculate center based on type
+          if (el.type === 'rectangle' || el.type === 'image' || el.type === 'text') {
+            elCenter.x = el.x + (el.width || 0) / 2;
+            elCenter.y = el.y + (el.height || 0) / 2;
+          } else if (el.type === 'pen' || el.type === 'brush' || el.type === 'line' || el.type === 'arrow') {
+            // For path/line elements, check if ANY point is inside, or just use the first point as a shortcut
+            if (el.points && el.points.length >= 2) {
+              elCenter.x = el.x + el.points[0];
+              elCenter.y = el.y + el.points[1];
+            }
           }
+          // Circle, Star, Polygon are already center-referenced (el.x, el.y is center)
 
           if (isPointInPolygon(elCenter, lassoPoints) && el.visible !== false) {
             batchSelect.push(el.id);
@@ -434,13 +457,57 @@ const Canvas = ({ width, height }) => {
         });
 
         if (batchSelect.length > 0) {
-          const isShiftDown = e?.evt?.shiftKey || useCanvasStore.getState().isShiftDown;
-          batchSelect.forEach((id, idx) => selectElement(id, idx > 0 || isShiftDown));
+          const isShiftDown = e.evt && e.evt.shiftKey;
+          batchSelect.forEach((id, idx) => {
+            // If it's the first element and Shift isn't down, we want to clear previous and start new selection.
+            // But selectElement(id, true) toggles.
+            // Correct logic: if not additive, clear first element's selection context.
+            selectElement(id, idx > 0 || isShiftDown);
+          });
         } else {
-          clearSelection();
+          if (!(e.evt && e.evt.shiftKey)) {
+            clearSelection();
+          }
         }
       }
       setLassoPoints(null);
+      return;
+    }
+
+    // Finish freehand drawing (Pen/Brush)
+    if (drawingCurrent && (activeTool === TOOLS.PEN || activeTool === TOOLS.BRUSH)) {
+      const type = activeTool === TOOLS.PEN ? ELEMENT_TYPES.PEN : ELEMENT_TYPES.BRUSH;
+      
+      // Optimization: Filter out duplicate points or points too close to each other
+      const filteredPoints = [];
+      const pts = drawingCurrent.points;
+      for (let i = 0; i < pts.length; i += 2) {
+        const x = pts[i];
+        const y = pts[i+1];
+        if (i > 0) {
+          const prevX = filteredPoints[filteredPoints.length - 2];
+          const prevY = filteredPoints[filteredPoints.length - 1];
+          const dist = Math.sqrt((x - prevX)**2 + (y - prevY)**2);
+          if (dist < 0.5) continue; // Skip if point is too close
+        }
+        filteredPoints.push(x, y);
+      }
+
+      if (filteredPoints.length >= 4) {
+        addElement({
+          type,
+          x: drawingCurrent.x,
+          y: drawingCurrent.y,
+          points: filteredPoints,
+          stroke: drawingSettings.stroke,
+          strokeWidth: drawingSettings.strokeWidth,
+          opacity: drawingSettings.opacity,
+          tension: drawingSettings.tension ?? 0.5,
+          zIndex: elements.length,
+        });
+      }
+      setDrawingCurrent(null);
+      clearSelection(); // Clear selection so the next stroke can be configured independently
       return;
     }
 
@@ -572,7 +639,7 @@ const Canvas = ({ width, height }) => {
       
       setSelectionRect(null);
     }
-  }, [isPanning, isDrawing, isErasing, drawingStart, selectionRect, drawingShape, addElement, endDrawing, elements, selectElement, activeTool, lassoPoints, setLassoPoints, clearSelection, setActiveTool]);
+  }, [isPanning, isDrawing, isErasing, drawingStart, selectionRect, drawingShape, addElement, endDrawing, elements, selectElement, activeTool, lassoPoints, setLassoPoints, clearSelection, setActiveTool, drawingCurrent, drawingSettings]);
 
   // Handle element click
   const handleElementClick = useCallback((e, id) => {
@@ -762,7 +829,7 @@ const Canvas = ({ width, height }) => {
                   activeTool === TOOLS.TEXT ? 'text' :
                   activeTool === TOOLS.ERASER ? undefined :
                   activeTool === TOOLS.LASSO ? 'crosshair' :
-                  [TOOLS.RECTANGLE, TOOLS.CIRCLE, TOOLS.LINE, TOOLS.ARROW, TOOLS.STAR, TOOLS.POLYGON].includes(activeTool) ? 'crosshair' : 'default'
+                  [TOOLS.RECTANGLE, TOOLS.CIRCLE, TOOLS.LINE, TOOLS.ARROW, TOOLS.STAR, TOOLS.POLYGON, TOOLS.PEN, TOOLS.BRUSH].includes(activeTool) ? 'crosshair' : 'default'
         }}
       >
         <Layer>
@@ -821,7 +888,25 @@ const Canvas = ({ width, height }) => {
             />
           )}
 
-          {/* Lasso Preview */}
+          {/* Freehand Preview (Pen/Brush) */}
+      {(activeTool === TOOLS.PEN || activeTool === TOOLS.BRUSH) && drawingCurrent && (
+        <KonvaLine
+          x={drawingCurrent.x}
+          y={drawingCurrent.y}
+          points={drawingCurrent.points}
+          stroke={drawingSettings.stroke}
+          strokeWidth={drawingSettings.strokeWidth}
+          opacity={drawingSettings.opacity}
+          lineCap="round"
+          lineJoin="round"
+          tension={drawingSettings.tension ?? 0.5}
+          shadowBlur={activeTool === TOOLS.BRUSH ? 2 : 0}
+          shadowColor={activeTool === TOOLS.BRUSH ? drawingSettings.stroke : undefined}
+          perfectDrawEnabled={false}
+        />
+      )}
+
+      {/* Lasso Preview */}
           {activeTool === TOOLS.LASSO && lassoPoints && (
             <KonvaLine
               points={lassoPoints.flatMap(p => [p.x, p.y])}

@@ -1,9 +1,12 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const PADDING = 8; // min gap from viewport edge
+
 /**
- * Lightweight Tooltip — no Radix dependency.
- * Shows on hover with optional keyboard shortcut.
+ * Lightweight Tooltip — renders via Portal to escape overflow:hidden parents.
+ * Clamps to viewport so it never overflows the screen edge.
  */
 const Tooltip = ({
   children,
@@ -13,27 +16,81 @@ const Tooltip = ({
   disabled = false,
 }) => {
   const [visible, setVisible] = useState(false);
+  const [anchor, setAnchor] = useState({ cx: 0, cy: 0, rect: null });
+  const [style, setStyle] = useState({});
+  const anchorRef = useRef(null);
+  const tooltipRef = useRef(null);
   const timerRef = useRef(null);
-  const positionClass = {
-    bottom: 'top-full mt-1.5 left-1/2 -translate-x-1/2',
-    top:    'bottom-full mb-1.5 left-1/2 -translate-x-1/2',
-    left:   'right-full mr-1.5 top-1/2 -translate-y-1/2',
-    right:  'left-full ml-1.5 top-1/2 -translate-y-1/2',
-  }[side];
+
+  const computeAnchor = useCallback(() => {
+    if (!anchorRef.current) return;
+    const rect = anchorRef.current.getBoundingClientRect();
+    setAnchor({
+      cx: rect.left + rect.width / 2,
+      cy: rect.top + rect.height / 2,
+      rect,
+    });
+  }, []);
 
   const show = useCallback(() => {
+    computeAnchor();
     timerRef.current = setTimeout(() => setVisible(true), 350);
-  }, []);
+  }, [computeAnchor]);
 
   const hide = useCallback(() => {
     clearTimeout(timerRef.current);
     setVisible(false);
   }, []);
 
+  // Recalculate on scroll/resize while visible
+  useEffect(() => {
+    if (!visible) return;
+    const update = () => computeAnchor();
+    window.addEventListener('scroll', update, true);
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('scroll', update, true);
+      window.removeEventListener('resize', update);
+    };
+  }, [visible, computeAnchor]);
+
+  // After tooltip mounts, measure its width and clamp position to viewport
+  useLayoutEffect(() => {
+    if (!visible || !tooltipRef.current || !anchor.rect) return;
+    const tipW = tooltipRef.current.offsetWidth;
+    const tipH = tooltipRef.current.offsetHeight;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const { cx, cy, rect } = anchor;
+
+    let left, top;
+
+    if (side === 'bottom') {
+      left = cx - tipW / 2;
+      top  = rect.bottom + 6;
+    } else if (side === 'top') {
+      left = cx - tipW / 2;
+      top  = rect.top - tipH - 6;
+    } else if (side === 'left') {
+      left = rect.left - tipW - 6;
+      top  = cy - tipH / 2;
+    } else { // right
+      left = rect.right + 6;
+      top  = cy - tipH / 2;
+    }
+
+    // Clamp within viewport
+    left = Math.max(PADDING, Math.min(left, vw - tipW - PADDING));
+    top  = Math.max(PADDING, Math.min(top,  vh - tipH - PADDING));
+
+    setStyle({ position: 'fixed', zIndex: 9999, pointerEvents: 'none', left, top });
+  }, [visible, anchor, side]);
+
   if (disabled || !label) return children;
 
   return (
     <span
+      ref={anchorRef}
       className="relative inline-flex"
       onMouseEnter={show}
       onMouseLeave={hide}
@@ -41,21 +98,26 @@ const Tooltip = ({
       onBlur={hide}
     >
       {children}
-      <AnimatePresence>
-        {visible && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.92 }}
-            transition={{ duration: 0.1 }}
-            className={`tooltip-content absolute z-[9999] pointer-events-none whitespace-nowrap ${positionClass}`}
-            role="tooltip"
-          >
-            <span>{label}</span>
-            {shortcut && <kbd className="ml-1.5">{shortcut}</kbd>}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {createPortal(
+        <AnimatePresence>
+          {visible && (
+            <motion.div
+              ref={tooltipRef}
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.92 }}
+              transition={{ duration: 0.1 }}
+              style={style}
+              className="tooltip-content"
+              role="tooltip"
+            >
+              <span>{label}</span>
+              {shortcut && <kbd className="ml-1.5">{shortcut}</kbd>}
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
     </span>
   );
 };

@@ -15,12 +15,12 @@ const ASSET_CATEGORIES = [
 
 const PRESET_ASSETS = {
   shapes: [
-    { type: 'rectangle', label: 'Square', icon: Square, defaultProps: { width: 100, height: 100, fill: '#6366F1', cornerRadius: 0 } },
-    { type: 'rectangle', label: 'Rounded', icon: Square, defaultProps: { width: 120, height: 80, fill: '#14B8A6', cornerRadius: 16 } },
-    { type: 'circle',    label: 'Circle', icon: Circle, defaultProps: { radius: 50, fill: '#EF4444' } },
-    { type: 'polygon',   label: 'Triangle', icon: Triangle, defaultProps: { sides: 3, radius: 50, fill: '#10B981' } },
-    { type: 'star',      label: 'Star', icon: Star, defaultProps: { numPoints: 5, innerRadius: 25, outerRadius: 50, fill: '#F59E0B' } },
-    { type: 'polygon',   label: 'Hexagon', icon: Hexagon, defaultProps: { sides: 6, radius: 50, fill: '#8B5CF6' } },
+    { type: 'rectangle', label: 'Square', icon: Square, defaultProps: { width: 100, height: 100, fill: 'transparent', stroke: '#6366F1', strokeWidth: 2, cornerRadius: 0 } },
+    { type: 'rectangle', label: 'Rounded', icon: Square, defaultProps: { width: 120, height: 80, fill: 'transparent', stroke: '#14B8A6', strokeWidth: 2, cornerRadius: 16 } },
+    { type: 'circle',    label: 'Circle', icon: Circle, defaultProps: { radius: 50, fill: 'transparent', stroke: '#EF4444', strokeWidth: 2 } },
+    { type: 'polygon',   label: 'Triangle', icon: Triangle, defaultProps: { sides: 3, radius: 50, fill: 'transparent', stroke: '#10B981', strokeWidth: 2 } },
+    { type: 'star',      label: 'Star', icon: Star, defaultProps: { numPoints: 5, innerRadius: 25, outerRadius: 50, fill: 'transparent', stroke: '#F59E0B', strokeWidth: 2 } },
+    { type: 'polygon',   label: 'Hexagon', icon: Hexagon, defaultProps: { sides: 6, radius: 50, fill: 'transparent', stroke: '#8B5CF6', strokeWidth: 2 } },
     { type: 'text',      label: 'Heading', icon: Type, defaultProps: { text: 'Heading', fontSize: 32, fontWeight: 'bold', fill: '#FFFFFF' } },
     { type: 'line',      label: 'Line', icon: Minus, defaultProps: { points: [0, 0, 100, 0], stroke: '#94A3B8', strokeWidth: 2 } },
   ],

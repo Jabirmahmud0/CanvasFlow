@@ -7,6 +7,7 @@ import {
   ChevronDown, Download, Upload, Trash2, Grid3X3,
   Magnet, ScanLine, Keyboard, PanelLeftOpen, PanelRightOpen,
   FileText, Eye, ExternalLink, Eraser, LassoSelect,
+  Pen, Brush,
 } from 'lucide-react';
 import { useCanvasStore } from '@/store/useCanvasStore';
 import { useTheme } from '@/hooks/useTheme';
@@ -41,7 +42,14 @@ const TOOL_GROUPS = [
       { id: TOOLS.SELECT, icon: MousePointer2, label: 'Select', shortcut: 'V' },
       { id: TOOLS.LASSO,  icon: LassoSelect,   label: 'Lasso',  shortcut: 'Q' },
       { id: TOOLS.PAN,    icon: Hand,          label: 'Pan',    shortcut: 'H' },
-      { id: TOOLS.ERASER, icon: Eraser,        label: 'Eraser', shortcut: 'E' },
+      { id: TOOLS.ERASER, icon: Eraser,        label: "Eraser", shortcut: 'E' },
+    ],
+  },
+  {
+    id: 'drawing',
+    tools: [
+      { id: TOOLS.PEN,   icon: Pen,   label: 'Pen',   shortcut: 'P' },
+      { id: TOOLS.BRUSH, icon: Brush, label: 'Brush', shortcut: 'B' },
     ],
   },
   {
@@ -327,6 +335,7 @@ const TopToolbar = ({
     exportToJSON, importFromJSON, clearCanvas,
     showGrid, snapToGrid, showSmartGuides,
     toggleGrid, toggleSnapToGrid, toggleSmartGuides,
+    drawingSettings, setDrawingSetting,
   } = useCanvasStore();
 
   const { theme, setTheme } = useTheme();
@@ -375,22 +384,30 @@ const TopToolbar = ({
         <Logo />
       </div>
 
-      <div className="flex items-center gap-0.5">
-        <FileMenu
-          onExport={handleExport}
-          onImport={handleImport}
-          onClear={clearCanvas}
-          onToggleShortcuts={onToggleShortcuts}
-        />
-        <ViewMenu
-          showGrid={showGrid}
-          snapToGrid={snapToGrid}
-          showSmartGuides={showSmartGuides}
-          onToggleGrid={toggleGrid}
-          onToggleSnap={toggleSnapToGrid}
-          onToggleGuides={toggleSmartGuides}
-        />
-      </div>
+      <AnimatePresence mode="popLayout">
+        <motion.div
+          key="menus"
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -10 }}
+          className="flex items-center gap-0.5"
+        >
+          <FileMenu
+            onExport={handleExport}
+            onImport={handleImport}
+            onClear={clearCanvas}
+            onToggleShortcuts={onToggleShortcuts}
+          />
+          <ViewMenu
+            showGrid={showGrid}
+            snapToGrid={snapToGrid}
+            showSmartGuides={showSmartGuides}
+            onToggleGrid={toggleGrid}
+            onToggleSnap={toggleSnapToGrid}
+            onToggleGuides={toggleSmartGuides}
+          />
+        </motion.div>
+      </AnimatePresence>
 
       {/* ── Center: Tool Palette (Figma pill style) ── */}
       <div className="flex-1 flex items-center justify-center">

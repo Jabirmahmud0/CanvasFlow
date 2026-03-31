@@ -3,13 +3,15 @@ import { Rect, Circle, Text, Line, Star, RegularPolygon, Group, Transformer } fr
 import { COLORS } from '@/constants';
 
 // Arrow shape
-const Arrow = ({ x, y, points, stroke, strokeWidth, pointerLength, pointerWidth, fill, opacity }) => {
-  const arrowRef = useRef(null);
-  
-  useEffect(() => {
-    if (arrowRef.current) {
-      // Custom arrow shape using Konva's arrow
-      arrowRef.current.sceneFunc((context, shape) => {
+const Arrow = ({ points, pointerLength, pointerWidth, ...props }) => {
+  return (
+    <Line
+      {...props}
+      points={points}
+      lineCap="round"
+      lineJoin="round"
+      sceneFunc={(context, shape) => {
+        if (!points || points.length < 4) return;
         const [x1, y1, x2, y2] = points;
         const angle = Math.atan2(y2 - y1, x2 - x1);
         
@@ -19,34 +21,21 @@ const Arrow = ({ x, y, points, stroke, strokeWidth, pointerLength, pointerWidth,
         context.strokeShape(shape);
         
         // Draw arrowhead
+        const pLen = pointerLength || 10;
         context.beginPath();
         context.moveTo(x2, y2);
         context.lineTo(
-          x2 - pointerLength * Math.cos(angle - Math.PI / 6),
-          y2 - pointerLength * Math.sin(angle - Math.PI / 6)
+          x2 - pLen * Math.cos(angle - Math.PI / 6),
+          y2 - pLen * Math.sin(angle - Math.PI / 6)
         );
         context.lineTo(
-          x2 - pointerLength * Math.cos(angle + Math.PI / 6),
-          y2 - pointerLength * Math.sin(angle + Math.PI / 6)
+          x2 - pLen * Math.cos(angle + Math.PI / 6),
+          y2 - pLen * Math.sin(angle + Math.PI / 6)
         );
         context.closePath();
         context.fillShape(shape);
-      });
-    }
-  }, [points, pointerLength, pointerWidth]);
-
-  return (
-    <Group x={x} y={y} opacity={opacity}>
-      <Line
-        ref={arrowRef}
-        points={points}
-        stroke={stroke}
-        strokeWidth={strokeWidth}
-        lineCap="round"
-        lineJoin="round"
-        fill={fill || stroke}
-      />
-    </Group>
+      }}
+    />
   );
 };
 
@@ -85,7 +74,7 @@ const CanvasElement = ({
 
   const handleDoubleClick = (e) => {
     e.cancelBubble = true;
-    onDoubleClick?.(e);
+    onDoubleClick?.(e, element);
   };
 
   const handleDragMove = (e) => {
@@ -118,10 +107,13 @@ const CanvasElement = ({
     onDragEnd: handleDragEnd,
     onTransform: handleTransform,
     onTransformEnd: handleTransformEnd,
-    shadowColor: isSelected ? COLORS.accentPrimary : 'transparent',
-    shadowBlur: isSelected ? 15 : 0,
-    shadowOpacity: isSelected ? 0.4 : 0,
-    shadowOffsetY: isSelected ? 5 : 0,
+    // Add selection indicator via stroke only if the element doesn't have its own stroke
+    // Or better, let Transformer handle the selection UI entirely.
+    // We'll keep a soft glow for selection.
+    shadowColor: isSelected ? COLORS.selectionBorder : 'transparent',
+    shadowBlur: isSelected ? 4 : 0,
+    shadowOpacity: isSelected ? 0.8 : 0,
+    strokeScaleEnabled: false, // Prevent stroke stretching
   };
 
   const renderShape = () => {
@@ -133,11 +125,12 @@ const CanvasElement = ({
             {...commonProps}
             width={element.width}
             height={element.height}
-            fill={element.fill}
-            stroke={isSelected ? COLORS.selectionBorder : element.stroke}
-            strokeWidth={isSelected ? 2 : element.strokeWidth || 0}
+            fill={element.fill === 'transparent' ? undefined : element.fill}
+            stroke={element.stroke}
+            strokeWidth={element.strokeWidth || 0}
             cornerRadius={element.cornerRadius || 0}
-            dash={element.dash}
+            dash={element.dash && element.dash.length > 0 ? element.dash : undefined}
+            dashEnabled={element.dash && element.dash.length > 0}
           />
         );
 
@@ -146,10 +139,12 @@ const CanvasElement = ({
           <Circle
             ref={shapeRef}
             {...commonProps}
-            radius={element.radius}
-            fill={element.fill}
-            stroke={isSelected ? COLORS.selectionBorder : element.stroke}
-            strokeWidth={isSelected ? 2 : element.strokeWidth || 0}
+            radius={element.radius || 50}
+            fill={element.fill === 'transparent' ? undefined : element.fill}
+            stroke={element.stroke}
+            strokeWidth={element.strokeWidth || 0}
+            dash={element.dash && element.dash.length > 0 ? element.dash : undefined}
+            dashEnabled={element.dash && element.dash.length > 0}
           />
         );
 
@@ -186,7 +181,8 @@ const CanvasElement = ({
             strokeWidth={element.strokeWidth}
             lineCap={element.lineCap || 'round'}
             lineJoin={element.lineJoin || 'round'}
-            dash={element.dash}
+            dash={element.dash && element.dash.length > 0 ? element.dash : undefined}
+            dashEnabled={element.dash && element.dash.length > 0}
             tension={element.tension}
           />
         );
@@ -212,9 +208,11 @@ const CanvasElement = ({
             numPoints={element.numPoints || 5}
             innerRadius={element.innerRadius || 20}
             outerRadius={element.outerRadius || 40}
-            fill={element.fill}
-            stroke={isSelected ? COLORS.selectionBorder : element.stroke}
-            strokeWidth={isSelected ? 2 : element.strokeWidth || 0}
+            fill={element.fill === 'transparent' ? undefined : element.fill}
+            stroke={element.stroke}
+            strokeWidth={element.strokeWidth || 0}
+            dash={element.dash && element.dash.length > 0 ? element.dash : undefined}
+            dashEnabled={element.dash && element.dash.length > 0}
           />
         );
 
@@ -223,11 +221,35 @@ const CanvasElement = ({
           <RegularPolygon
             ref={shapeRef}
             {...commonProps}
-            sides={element.sides || 6}
+            sides={element.sides || 3}
             radius={element.radius || 50}
-            fill={element.fill}
-            stroke={isSelected ? COLORS.selectionBorder : element.stroke}
-            strokeWidth={isSelected ? 2 : element.strokeWidth || 0}
+            fill={element.fill === 'transparent' ? undefined : element.fill}
+            stroke={element.stroke}
+            strokeWidth={element.strokeWidth || 0}
+            dash={element.dash && element.dash.length > 0 ? element.dash : undefined}
+            dashEnabled={element.dash && element.dash.length > 0}
+          />
+        );
+
+      case 'pen':
+      case 'brush':
+        return (
+          <Line
+            ref={shapeRef}
+            {...commonProps}
+            points={element.points}
+            stroke={element.stroke}
+            strokeWidth={element.strokeWidth}
+            lineCap="round"
+            lineJoin="round"
+            tension={element.tension || 0.5}
+            // Override the commonProps selection shadow — glow on thin strokes looks bad
+            shadowColor={element.type === 'brush' ? element.stroke : 'transparent'}
+            shadowBlur={element.type === 'brush' ? 4 : 0}
+            shadowOpacity={element.type === 'brush' ? 0.5 : 0}
+            shadowOffsetX={0}
+            shadowOffsetY={0}
+            perfectDrawEnabled={false}
           />
         );
 
@@ -240,7 +262,12 @@ const CanvasElement = ({
     <>
       {/* Hide shape when text is being edited */}
       {!isBeingEdited && renderShape()}
-      {isSelected && element.type !== 'line' && element.type !== 'arrow' && !isBeingEdited && (
+      {isSelected &&
+        element.type !== 'line' &&
+        element.type !== 'arrow' &&
+        element.type !== 'pen' &&
+        element.type !== 'brush' &&
+        !isBeingEdited && (
         <Transformer
           ref={transformerRef}
           boundBoxFunc={(oldBox, newBox) => {

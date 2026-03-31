@@ -131,6 +131,8 @@ export const TOOLS = {
   PAN: 'pan',
   ERASER: 'eraser',
   LASSO: 'lasso',
+  PEN: 'pen',
+  BRUSH: 'brush',
 };
 
 // Tool configurations
@@ -180,7 +182,7 @@ export const TOOL_CONFIG = {
   [TOOLS.POLYGON]: {
     name: 'Polygon',
     icon: 'Hexagon',
-    shortcut: 'P',
+    shortcut: 'Shift+P',
     cursor: 'crosshair',
   },
   [TOOLS.PAN]: {
@@ -201,6 +203,18 @@ export const TOOL_CONFIG = {
     shortcut: 'Q',
     cursor: 'crosshair',
   },
+  [TOOLS.PEN]: {
+    name: 'Pen',
+    icon: 'Pen',
+    shortcut: 'P',
+    cursor: 'crosshair',
+  },
+  [TOOLS.BRUSH]: {
+    name: 'Brush',
+    icon: 'Brush',
+    shortcut: 'B',
+    cursor: 'crosshair',
+  },
 };
 
 // Element Types
@@ -212,6 +226,8 @@ export const ELEMENT_TYPES = {
   ARROW: 'arrow',
   STAR: 'star',
   POLYGON: 'polygon',
+  PEN: 'pen',
+  BRUSH: 'brush',
 };
 
 // History
@@ -229,10 +245,12 @@ export const SHORTCUTS = {
   lineTool: { key: 'l' },
   arrowTool: { key: 'a' },
   starTool: { key: 's' },
-  polygonTool: { key: 'p' },
+  polygonTool: { key: 'p', shift: true },
   panTool: { key: 'h' },
   eraserTool: { key: 'e' },
   lassoTool: { key: 'q' },
+  penTool: { key: 'p' },
+  brushTool: { key: 'b' },
   
   // Actions
   undo: { key: 'z', ctrl: true },
@@ -279,14 +297,14 @@ export const RESIZE_HANDLES = [
 // Colors from ColorHunt - cohesive palette for dark canvas
 export const DEFAULT_PROPERTIES = {
   rectangle: {
-    fill: '#FF6B6B',  // Coral Red - warm, attention-grabbing
-    stroke: '#EE5A5A',
+    fill: 'transparent',  // Coral Red - warm, attention-grabbing
+    stroke: '#FF6B6B',
     strokeWidth: 2,
     cornerRadius: 0,
   },
   circle: {
-    fill: '#4ECDC4',  // Turquoise - calm, balanced
-    stroke: '#3EDBD3',
+    fill: 'transparent',  // Turquoise - calm, balanced
+    stroke: '#4ECDC4',
     strokeWidth: 2,
   },
   text: {
@@ -320,5 +338,17 @@ export const DEFAULT_PROPERTIES = {
     stroke: '#5B4CDB',
     strokeWidth: 2,
     sides: 6,
+  },
+  pen: {
+    stroke: '#F8FAFC',
+    strokeWidth: 2,
+    opacity: 1,
+    tension: 0.5,
+  },
+  brush: {
+    stroke: '#6366F1',
+    strokeWidth: 8,
+    opacity: 0.6,
+    tension: 0.6,
   },
 };

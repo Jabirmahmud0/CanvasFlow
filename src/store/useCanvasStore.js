@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { subscribeWithSelector, persist } from 'zustand/middleware';
-import { CANVAS, TOOLS, HISTORY, ELEMENT_TYPES } from '@/constants';
+import { CANVAS, TOOLS, HISTORY, ELEMENT_TYPES, DEFAULT_PROPERTIES } from '@/constants';
 
 // Generate unique ID
 const generateId = () => `el_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -57,6 +57,14 @@ const initialState = {
   defaultFill: '#6366F1',
   defaultStroke: '#818CF8',
   defaultStrokeWidth: 2,
+  
+  // Drawing Properties (for Pen/Brush)
+  drawingSettings: {
+    stroke: '#6366F1',
+    strokeWidth: 2,
+    opacity: 1,
+    tension: 0.5,
+  },
 };
 
 // Create store with selector subscription and persistence
@@ -335,7 +343,33 @@ export const useCanvasStore = create(
 
     // ============ Tool Actions ============
 
-    setActiveTool: (tool) => set({ activeTool: tool, editingElementId: null }),
+    setActiveTool: (tool) => {
+      const { activeTool } = get();
+      if (activeTool === tool) return;
+      
+      const newState = { activeTool: tool, editingElementId: null };
+      
+      // Initialize drawing settings from defaults if switching TO a drawing tool
+      if (tool === TOOLS.PEN || tool === TOOLS.BRUSH) {
+        newState.drawingSettings = {
+          stroke: DEFAULT_PROPERTIES[tool].stroke,
+          strokeWidth: DEFAULT_PROPERTIES[tool].strokeWidth,
+          opacity: DEFAULT_PROPERTIES[tool].opacity || 1,
+          tension: DEFAULT_PROPERTIES[tool].tension || 0.5,
+        };
+      }
+      
+      set(newState);
+    },
+
+    setDrawingSetting: (key, value) => {
+      set((state) => ({
+        drawingSettings: {
+          ...state.drawingSettings,
+          [key]: value,
+        },
+      }));
+    },
 
     // ============ Drawing Actions ============
     
