@@ -130,6 +130,7 @@ export const TOOLS = {
   POLYGON: 'polygon',
   PAN: 'pan',
   ERASER: 'eraser',
+  LASSO: 'lasso',
 };
 
 // Tool configurations
@@ -194,6 +195,12 @@ export const TOOL_CONFIG = {
     shortcut: 'E',
     cursor: 'crosshair',
   },
+  [TOOLS.LASSO]: {
+    name: 'Lasso',
+    icon: 'LassoSelect',
+    shortcut: 'Q',
+    cursor: 'crosshair',
+  },
 };
 
 // Element Types
@@ -225,6 +232,7 @@ export const SHORTCUTS = {
   polygonTool: { key: 'p' },
   panTool: { key: 'h' },
   eraserTool: { key: 'e' },
+  lassoTool: { key: 'q' },
   
   // Actions
   undo: { key: 'z', ctrl: true },

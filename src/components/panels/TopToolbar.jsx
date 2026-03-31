@@ -6,7 +6,7 @@ import {
   Sun, Moon, Contrast, ZoomIn, ZoomOut,
   ChevronDown, Download, Upload, Trash2, Grid3X3,
   Magnet, ScanLine, Keyboard, PanelLeftOpen, PanelRightOpen,
-  FileText, Eye, ExternalLink, Eraser,
+  FileText, Eye, ExternalLink, Eraser, LassoSelect,
 } from 'lucide-react';
 import { useCanvasStore } from '@/store/useCanvasStore';
 import { useTheme } from '@/hooks/useTheme';
@@ -39,6 +39,7 @@ const TOOL_GROUPS = [
     id: 'select',
     tools: [
       { id: TOOLS.SELECT, icon: MousePointer2, label: 'Select', shortcut: 'V' },
+      { id: TOOLS.LASSO,  icon: LassoSelect,   label: 'Lasso',  shortcut: 'Q' },
       { id: TOOLS.PAN,    icon: Hand,          label: 'Pan',    shortcut: 'H' },
       { id: TOOLS.ERASER, icon: Eraser,        label: 'Eraser', shortcut: 'E' },
     ],

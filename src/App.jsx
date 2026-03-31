@@ -62,6 +62,7 @@ const ContextMenu = ({ x, y, onClose, items }) => {
 const SHORTCUT_GROUPS = [
   { category: 'Tools', items: [
     { key: 'V',          action: 'Select' },
+    { key: 'Q',          action: 'Lasso' },
     { key: 'E',          action: 'Eraser' },
     { key: 'R',          action: 'Rectangle' },
     { key: 'C',          action: 'Circle' },
@@ -242,6 +243,7 @@ function App() {
     if (!isCtrl && !shiftKey) {
       const toolMap = { 
         v: TOOLS.SELECT, 
+        q: TOOLS.LASSO,
         e: TOOLS.ERASER, 
         r: TOOLS.RECTANGLE, 
         c: TOOLS.CIRCLE, 

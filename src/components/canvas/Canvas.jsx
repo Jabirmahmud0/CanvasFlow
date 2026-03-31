@@ -134,6 +134,7 @@ const Canvas = ({ width, height }) => {
   const [textEditor, setTextEditor] = useState(null);
   const [drawingCurrent, setDrawingCurrent] = useState(null);
   const [isErasing, setIsErasing] = useState(false);
+  const [lassoPoints, setLassoPoints] = useState(null);
 
   // Get theme for light/dark mode
   const { theme, canvasBackground: themeCanvasBg } = useTheme();
@@ -259,6 +260,12 @@ const Canvas = ({ width, height }) => {
       return;
     }
 
+    // Lasso mode
+    if (activeTool === TOOLS.LASSO) {
+      setLassoPoints([worldPos]);
+      return;
+    }
+
     // Text tool - create text immediately
     if (activeTool === TOOLS.TEXT) {
       const newElement = {
@@ -312,7 +319,7 @@ const Canvas = ({ width, height }) => {
         });
       }
     }
-  }, [activeTool, screenToWorld, worldToScreen, startDrawing, addElement, clearSelection, elements, startEditing, zoom, setActiveTool, isDrawing]);
+  }, [activeTool, screenToWorld, worldToScreen, startDrawing, addElement, clearSelection, elements, startEditing, zoom, setActiveTool, isDrawing, setLassoPoints]);
 
   // Handle mouse move
   const handleMouseMove = useCallback((e) => {
@@ -342,6 +349,12 @@ const Canvas = ({ width, height }) => {
 
     const worldPos = screenToWorld(pointer.x, pointer.y);
 
+    // Lasso mode
+    if (activeTool === TOOLS.LASSO && lassoPoints) {
+      setLassoPoints((prev) => [...prev, worldPos]);
+      return;
+    }
+
     // Drawing - update current position for preview
     if (isDrawing && drawingStart) {
       setDrawingCurrent(worldPos);
@@ -369,10 +382,10 @@ const Canvas = ({ width, height }) => {
         height,
       });
     }
-  }, [isPanning, panStart, isDrawing, drawingStart, selectionRect, screenToWorld, pan]);
+  }, [isPanning, panStart, isDrawing, drawingStart, selectionRect, screenToWorld, pan, activeTool, lassoPoints]);
 
   // Handle mouse up
-  const handleMouseUp = useCallback(() => {
+  const handleMouseUp = useCallback((e) => {
     // End panning
     if (isPanning) {
       setIsPanning(false);
@@ -383,6 +396,51 @@ const Canvas = ({ width, height }) => {
     // End erasing
     if (isErasing) {
       setIsErasing(false);
+      return;
+    }
+
+    // End Lasso selection
+    if (activeTool === TOOLS.LASSO && lassoPoints) {
+      if (lassoPoints.length > 3) {
+        // Point-in-polygon helper (Ray-casting algorithm)
+        const isPointInPolygon = (p, poly) => {
+          let inside = false;
+          for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+            const xi = poly[i].x, yi = poly[i].y;
+            const xj = poly[j].x, yj = poly[j].y;
+            const intersect = ((yi > p.y) !== (yj > p.y)) && 
+                              (p.x < (xj - xi) * (p.y - yi) / (yj - yi) + xi);
+            if (intersect) inside = !inside;
+          }
+          return inside;
+        };
+
+        const batchSelect = [];
+        elements.forEach((el) => {
+          const elCenter = {
+            x: el.x + (el.width || (el.radius * 2) || 0) / 2,
+            y: el.y + (el.height || (el.radius * 2) || 0) / 2
+          };
+          
+          // Adjust center for shapes that are center-referenced
+          if (el.type === 'circle' || el.type === 'star' || el.type === 'polygon') {
+            elCenter.x = el.x;
+            elCenter.y = el.y;
+          }
+
+          if (isPointInPolygon(elCenter, lassoPoints) && el.visible !== false) {
+            batchSelect.push(el.id);
+          }
+        });
+
+        if (batchSelect.length > 0) {
+          const isShiftDown = e?.evt?.shiftKey || useCanvasStore.getState().isShiftDown;
+          batchSelect.forEach((id, idx) => selectElement(id, idx > 0 || isShiftDown));
+        } else {
+          clearSelection();
+        }
+      }
+      setLassoPoints(null);
       return;
     }
 
@@ -514,7 +572,7 @@ const Canvas = ({ width, height }) => {
       
       setSelectionRect(null);
     }
-  }, [isPanning, isDrawing, drawingStart, selectionRect, drawingShape, addElement, endDrawing, elements, selectElement]);
+  }, [isPanning, isDrawing, isErasing, drawingStart, selectionRect, drawingShape, addElement, endDrawing, elements, selectElement, activeTool, lassoPoints, setLassoPoints, clearSelection, setActiveTool]);
 
   // Handle element click
   const handleElementClick = useCallback((e, id) => {
@@ -692,8 +750,8 @@ const Canvas = ({ width, height }) => {
         onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseUp={(e) => handleMouseUp(e)}
+        onMouseLeave={(e) => handleMouseUp(e)}
         className={`canvas-stage ${
           activeTool === TOOLS.SELECT ? 'cursor-select' : 
           activeTool === TOOLS.ERASER ? 'cursor-eraser' : ''
@@ -702,8 +760,9 @@ const Canvas = ({ width, height }) => {
           cursor: activeTool === TOOLS.PAN || isPanning ? 'grab' :
                   activeTool === TOOLS.SELECT ? 'move' :
                   activeTool === TOOLS.TEXT ? 'text' :
-                  [TOOLS.RECTANGLE, TOOLS.CIRCLE, TOOLS.LINE, TOOLS.ARROW, TOOLS.STAR, TOOLS.POLYGON].includes(activeTool) ? 'crosshair' : 
-                  activeTool === TOOLS.ERASER ? 'none' : 'default'
+                  activeTool === TOOLS.ERASER ? undefined :
+                  activeTool === TOOLS.LASSO ? 'crosshair' :
+                  [TOOLS.RECTANGLE, TOOLS.CIRCLE, TOOLS.LINE, TOOLS.ARROW, TOOLS.STAR, TOOLS.POLYGON].includes(activeTool) ? 'crosshair' : 'default'
         }}
       >
         <Layer>
@@ -759,6 +818,20 @@ const Canvas = ({ width, height }) => {
               start={drawingStart}
               current={drawingCurrent}
               zoom={zoom}
+            />
+          )}
+
+          {/* Lasso Preview */}
+          {activeTool === TOOLS.LASSO && lassoPoints && (
+            <KonvaLine
+              points={lassoPoints.flatMap(p => [p.x, p.y])}
+              stroke={COLORS.accentPrimary}
+              strokeWidth={2 / zoom}
+              dash={[5 / zoom, 5 / zoom]}
+              fill={COLORS.accentPrimary + '1A'} // 10% opacity
+              closed={true}
+              lineJoin="round"
+              lineCap="round"
             />
           )}
 
