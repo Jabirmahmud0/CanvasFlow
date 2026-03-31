@@ -1,14 +1,15 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCanvasStore } from '@/store/useCanvasStore';
 import { TOOLS, SHORTCUTS } from '@/constants';
 import TopToolbar from '@/components/panels/TopToolbar';
-import LayersPanel from '@/components/panels/LayersPanel';
-import PropertiesPanel from '@/components/panels/PropertiesPanel';
-import FloatingToolbar from '@/components/panels/FloatingToolbar';
 import Canvas from '@/components/canvas/Canvas';
 import { PWAUpdatePrompt } from '@/components/ui/PWAUpdatePrompt';
 import './App.css';
+
+const LeftSidebar = lazy(() => import('@/components/panels/LeftSidebar'));
+const PropertiesPanel = lazy(() => import('@/components/panels/PropertiesPanel'));
+const FloatingToolbar = lazy(() => import('@/components/panels/FloatingToolbar'));
 
 // Context Menu Component
 const ContextMenu = ({ x, y, onClose, items }) => {
@@ -476,8 +477,10 @@ function App() {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Sidebar - Layers */}
-        <LayersPanel />
+        {/* Left Sidebar - Layers & Assets */}
+        <Suspense fallback={<div className="w-72 bg-slate-900/95 backdrop-blur-sm border-r border-slate-800 flex flex-col relative z-10" />}>
+          <LeftSidebar />
+        </Suspense>
 
         {/* Canvas Area */}
         <div 
@@ -490,7 +493,9 @@ function App() {
           />
           
           {/* Floating Toolbar */}
-          <FloatingToolbar />
+          <Suspense fallback={null}>
+            <FloatingToolbar />
+          </Suspense>
 
           {/* Status Bar */}
           <motion.div
@@ -524,7 +529,9 @@ function App() {
         </div>
 
         {/* Right Panel - Properties */}
-        <PropertiesPanel />
+        <Suspense fallback={<div className="w-72 bg-slate-900/95 backdrop-blur-sm border-l border-slate-800" />}>
+          <PropertiesPanel />
+        </Suspense>
       </div>
 
       {/* Context Menu */}

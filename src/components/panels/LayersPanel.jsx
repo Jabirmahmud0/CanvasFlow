@@ -114,7 +114,7 @@ const LayerItem = ({
   );
 };
 
-const LayersPanel = () => {
+const LayersPanel = ({ isEmbedded = false }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showActions, setShowActions] = useState(false);
 
@@ -161,10 +161,12 @@ const LayersPanel = () => {
 
   return (
     <motion.div
-      initial={{ x: -20, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      className="w-72 bg-slate-900/95 backdrop-blur-sm border-r border-slate-800 flex flex-col"
-      role="complementary"
+      initial={isEmbedded ? false : { x: -20, opacity: 0 }}
+      animate={isEmbedded ? false : { x: 0, opacity: 1 }}
+      className={`flex flex-col h-full bg-slate-900/95 ${
+        !isEmbedded ? 'w-72 backdrop-blur-sm border-r border-slate-800' : ''
+      }`}
+      role={isEmbedded ? 'region' : 'complementary'}
       aria-label="Layers panel"
     >
       {/* Header */}

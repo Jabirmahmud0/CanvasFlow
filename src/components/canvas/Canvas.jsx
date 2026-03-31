@@ -185,32 +185,39 @@ const Canvas = ({ width, height }) => {
   }, [offset, zoom]);
 
   // Handle wheel zoom
+  const rafRef = useRef(null);
   const handleWheel = useCallback((e) => {
     e.evt.preventDefault();
     
-    const stage = stageRef.current;
-    if (!stage) return;
-
-    const oldScale = zoom;
-    const pointer = stage.getPointerPosition();
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
     
-    const mousePointTo = {
-      x: (pointer.x - offset.x) / oldScale,
-      y: (pointer.y - offset.y) / oldScale,
-    };
+    rafRef.current = requestAnimationFrame(() => {
+      const stage = stageRef.current;
+      if (!stage) return;
 
-    const newScale = e.evt.deltaY > 0 
-      ? Math.max(CANVAS.minZoom, oldScale - CANVAS.zoomStep)
-      : Math.min(CANVAS.maxZoom, oldScale + CANVAS.zoomStep);
+      // Access fresh state directly instead of via closure to avoid strict dependency loop
+      const oldScale = useCanvasStore.getState().zoom;
+      const cachedOffset = useCanvasStore.getState().offset;
+      const pointer = stage.getPointerPosition();
+      
+      const mousePointTo = {
+        x: (pointer.x - cachedOffset.x) / oldScale,
+        y: (pointer.y - cachedOffset.y) / oldScale,
+      };
 
-    const newOffset = {
-      x: pointer.x - mousePointTo.x * newScale,
-      y: pointer.y - mousePointTo.y * newScale,
-    };
+      const newScale = e.evt.deltaY > 0 
+        ? Math.max(CANVAS.minZoom, oldScale - CANVAS.zoomStep)
+        : Math.min(CANVAS.maxZoom, oldScale + CANVAS.zoomStep);
 
-    setZoom(newScale);
-    setOffset(newOffset);
-  }, [zoom, offset, setZoom, setOffset]);
+      const newOffset = {
+        x: pointer.x - mousePointTo.x * newScale,
+        y: pointer.y - mousePointTo.y * newScale,
+      };
+
+      setZoom(newScale);
+      setOffset(newOffset);
+    });
+  }, [setZoom, setOffset]);
 
   // Handle mouse down
   const handleMouseDown = useCallback((e) => {
@@ -587,11 +594,61 @@ const Canvas = ({ width, height }) => {
     addToHistory();
   }, [addToHistory]);
 
+  // Handle drag and drop from AssetLibrary
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  }, []);
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      if (data.type === 'canvas/asset') {
+        const stage = stageRef.current;
+        if (!stage) return;
+        
+        const stageBox = stage.container().getBoundingClientRect();
+        const pointerPosition = {
+          x: e.clientX - stageBox.left,
+          y: e.clientY - stageBox.top
+        };
+        
+        const worldPos = screenToWorld(pointerPosition.x, pointerPosition.y);
+        
+        const width = data.props.width || data.props.radius * 2 || 100;
+        const height = data.props.height || data.props.radius * 2 || 100;
+        
+        let x = worldPos.x;
+        let y = worldPos.y;
+        
+        if (!['circle', 'star', 'polygon'].includes(data.elementType)) {
+          x -= width / 2;
+          y -= height / 2;
+        }
+
+        const id = addElement({
+          type: data.elementType,
+          x,
+          y,
+          ...data.props
+        });
+        selectElement(id);
+      }
+    } catch (err) {
+      // Not a valid JSON payload, ignore
+    }
+  }, [screenToWorld, addElement, selectElement]);
+
   // Get selection bounds
   const bounds = getBounds();
 
   return (
-    <div className="relative w-full h-full">
+    <div 
+      className="relative w-full h-full"
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
       <Stage
         ref={stageRef}
         width={width}

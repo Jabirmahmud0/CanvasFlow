@@ -86,12 +86,28 @@ export const useGeometryWorker = () => {
     return sendToWorker('CALCULATE_POLYGON_PATH', { cx, cy, sides, radius });
   }, [sendToWorker]);
 
+  const generateThumbnail = useCallback((width, height, elements) => {
+    return new Promise((resolve, reject) => {
+      const offscreenWorker = new Worker(
+        new URL('@/workers/offscreen.worker.js', import.meta.url),
+        { type: 'module' }
+      );
+      offscreenWorker.onmessage = (e) => {
+        if (e.data.error) reject(new Error(e.data.error));
+        else resolve(e.data.imageBitmap);
+        offscreenWorker.terminate();
+      };
+      offscreenWorker.postMessage({ id: 'thumb', type: 'thumbnail', width, height, elements });
+    });
+  }, []);
+
   return {
     calculateSmartGuides,
     calculateBounds,
     findElementsAtPoint,
     calculateStarPath,
     calculatePolygonPath,
+    generateThumbnail,
     isReady: workerRef.current !== null,
   };
 };

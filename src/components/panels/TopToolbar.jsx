@@ -23,9 +23,13 @@ import {
   ChevronDown,
   Settings,
   Layers,
-  Target
+  Target,
+  Moon,
+  Sun,
+  Palette
 } from 'lucide-react';
 import { useCanvasStore } from '@/store/useCanvasStore';
+import { useTheme } from '@/hooks/useTheme';
 import { TOOLS, TOOL_CONFIG, COLORS } from '@/constants';
 
 const ToolButton = ({ tool, activeTool, onClick, icon: Icon, label, shortcut }) => (
@@ -82,6 +86,9 @@ const ActionButton = ({ onClick, icon: Icon, label, disabled, shortcut, variant 
 const TopToolbar = () => {
   const [showFileMenu, setShowFileMenu] = useState(false);
   const [showViewMenu, setShowViewMenu] = useState(false);
+  const [showThemeMenu, setShowThemeMenu] = useState(false);
+  
+  const { theme, setTheme } = useTheme();
   
   const {
     activeTool,
@@ -350,6 +357,56 @@ const TopToolbar = () => {
             label="Zoom In"
             shortcut="Ctrl++"
           />
+        </div>
+
+        <div className="w-px h-8 bg-slate-700" role="separator" aria-hidden="true" />
+        
+        {/* Theme Menu */}
+        <div className="relative">
+          <button
+            onClick={() => setShowThemeMenu(!showThemeMenu)}
+            className="flex items-center justify-center p-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+            title="Theme Settings"
+            aria-label="Theme settings"
+          >
+            {theme === 'light' ? <Sun size={18} /> : theme === 'high-contrast' ? <Palette size={18} /> : <Moon size={18} />}
+          </button>
+          <AnimatePresence>
+            {showThemeMenu && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="absolute top-full right-0 mt-2 w-40 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 py-1"
+                role="menu"
+              >
+                <button
+                  onClick={() => { setTheme('dark'); setShowThemeMenu(false); }}
+                  className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-colors ${theme === 'dark' ? 'text-indigo-400 bg-slate-700/50' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+                  role="menuitem"
+                >
+                  <span className="flex items-center gap-2"><Moon size={14} /> Dark</span>
+                  {theme === 'dark' && <span>✓</span>}
+                </button>
+                <button
+                  onClick={() => { setTheme('light'); setShowThemeMenu(false); }}
+                  className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-colors ${theme === 'light' ? 'text-indigo-400 bg-slate-700/50' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+                  role="menuitem"
+                >
+                  <span className="flex items-center gap-2"><Sun size={14} /> Light</span>
+                  {theme === 'light' && <span>✓</span>}
+                </button>
+                <button
+                  onClick={() => { setTheme('high-contrast'); setShowThemeMenu(false); }}
+                  className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-colors ${theme === 'high-contrast' ? 'text-indigo-400 bg-slate-700/50' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+                  role="menuitem"
+                >
+                  <span className="flex items-center gap-2"><Palette size={14} /> High Contrast</span>
+                  {theme === 'high-contrast' && <span>✓</span>}
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <div className="w-px h-8 bg-slate-700" role="separator" aria-hidden="true" />
