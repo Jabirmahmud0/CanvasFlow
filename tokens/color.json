@@ -1,0 +1,43 @@
+{
+  "color": {
+    "canvas": {
+      "bg": { "value": "#0F172A" },
+      "grid": { "value": "#1E293B" }
+    },
+    "surface": {
+      "primary": { "value": "#1E293B" },
+      "secondary": { "value": "#334155" },
+      "tertiary": { "value": "#475569" }
+    },
+    "accent": {
+      "primary": { "value": "#6366F1" },
+      "hover": { "value": "#4F46E5" },
+      "active": { "value": "#4338CA" },
+      "light": { "value": "#818CF8" }
+    },
+    "text": {
+      "primary": { "value": "#F8FAFC" },
+      "secondary": { "value": "#CBD5E1" },
+      "muted": { "value": "#64748B" },
+      "disabled": { "value": "#475569" }
+    },
+    "semantic": {
+      "success": { "value": "#22C55E" },
+      "warning": { "value": "#F59E0B" },
+      "error": { "value": "#EF4444" },
+      "info": { "value": "#3B82F6" }
+    },
+    "selection": {
+      "fill": { "value": "#6366F1" },
+      "border": { "value": "#818CF8" }
+    },
+    "smartGuide": {
+      "value": "#F59E0B"
+    },
+    "border": {
+      "default": { "value": "#334155" },
+      "hover": { "value": "#475569" },
+      "focus": { "value": "#6366F1" }
+    }
+  }
+}

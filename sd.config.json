@@ -1,0 +1,46 @@
+{
+  "source": ["tokens/**/*.json"],
+  "platforms": {
+    "css": {
+      "transformGroup": "css",
+      "buildPath": "src/styles/",
+      "files": [{
+        "destination": "tokens.css",
+        "format": "css/variables",
+        "options": {
+          "selector": ":root",
+          "outputReferences": true
+        }
+      }]
+    },
+    "js": {
+      "transformGroup": "js",
+      "buildPath": "src/constants/",
+      "files": [{
+        "destination": "designTokens.js",
+        "format": "javascript/es6",
+        "export": "default"
+      }]
+    },
+    "scss": {
+      "transformGroup": "scss",
+      "buildPath": "src/styles/",
+      "files": [{
+        "destination": "tokens.scss",
+        "format": "scss/variables",
+        "options": {
+          "outputReferences": true
+        }
+      }]
+    },
+    "ts": {
+      "transformGroup": "js",
+      "buildPath": "src/constants/",
+      "files": [{
+        "destination": "designTokens.ts",
+        "format": "typescript/es6-declarations",
+        "fileHeader": "customFileHeader"
+      }]
+    }
+  }
+}

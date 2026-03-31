@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6366F1"/>
+    </marker>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="800" fill="#0F172A"/>
+  
+  <!-- Title -->
+  <text x="600" y="40" text-anchor="middle" fill="#F8FAFC" font-size="24" font-weight="bold" font-family="Inter, sans-serif">CanvasFlow Architecture Diagram</text>
+  
+  <!-- User Input Layer -->
+  <g transform="translate(500, 70)">
+    <rect width="200" height="50" rx="8" fill="#1E293B" stroke="#6366F1" stroke-width="2"/>
+    <text x="100" y="30" text-anchor="middle" fill="#F8FAFC" font-size="14" font-family="Inter, sans-serif">User Input</text>
+  </g>
+  
+  <!-- Arrow down -->
+  <line x1="600" y1="120" x2="600" y2="150" stroke="#6366F1" stroke-width="2" marker-end="url(#arrowhead)"/>
+  
+  <!-- React Components Layer -->
+  <g transform="translate(350, 160)">
+    <rect width="500" height="80" rx="8" fill="#1E293B" stroke="#8B5CF6" stroke-width="2"/>
+    <text x="250" y="30" text-anchor="middle" fill="#F8FAFC" font-size="16" font-weight="600" font-family="Inter, sans-serif">React Components</text>
+    <text x="250" y="55" text-anchor="middle" fill="#94A3B8" font-size="12" font-family="Inter, sans-serif">TopToolbar | LayersPanel | PropertiesPanel | Canvas</text>
+  </g>
+  
+  <!-- Arrows to Store and Konva -->
+  <line x1="500" y1="240" x2="400" y2="280" stroke="#6366F1" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="700" y1="240" x2="800" y2="280" stroke="#6366F1" stroke-width="2" marker-end="url(#arrowhead)"/>
+  
+  <!-- Zustand Store -->
+  <g transform="translate(200, 290)">
+    <rect width="250" height="120" rx="8" fill="#1E293B" stroke="#22C55E" stroke-width="2"/>
+    <text x="125" y="30" text-anchor="middle" fill="#F8FAFC" font-size="16" font-weight="600" font-family="Inter, sans-serif">Zustand Store</text>
+    
+    <!-- Store items -->
+    <text x="125" y="55" text-anchor="middle" fill="#94A3B8" font-size="11" font-family="Inter, sans-serif">View State (zoom, offset)</text>
+    <text x="125" y="72" text-anchor="middle" fill="#94A3B8" font-size="11" font-family="Inter, sans-serif">Elements (normalized array)</text>
+    <text x="125" y="89" text-anchor="middle" fill="#94A3B8" font-size="11" font-family="Inter, sans-serif">Selection (selectedIds)</text>
+    <text x="125" y="106" text-anchor="middle" fill="#94A3B8" font-size="11" font-family="Inter, sans-serif">History (undo/redo stack)</text>
+  </g>
+  
+  <!-- React Konva -->
+  <g transform="translate(750, 290)">
+    <rect width="250" height="120" rx="8" fill="#1E293B" stroke="#F59E0B" stroke-width="2"/>
+    <text x="125" y="30" text-anchor="middle" fill="#F8FAFC" font-size="16" font-weight="600" font-family="Inter, sans-serif">React Konva</text>
+    
+    <!-- Konva items -->
+    <text x="125" y="55" text-anchor="middle" fill="#94A3B8" font-size="11" font-family="Inter, sans-serif">Stage &amp; Layers</text>
+    <text x="125" y="72" text-anchor="middle" fill="#94A3B8" font-size="11" font-family="Inter, sans-serif">Grid Rendering</text>
+    <text x="125" y="89" text-anchor="middle" fill="#94A3B8" font-size="11" font-family="Inter, sans-serif">Shape Components</text>
+    <text x="125" y="106" text-anchor="middle" fill="#94A3B8" font-size="11" font-family="Inter, sans-serif">Transformers</text>
+  </g>
+  
+  <!-- Arrows back up -->
+  <line x1="350" y1="350" x2="250" y2="350" stroke="#22C55E" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="350" y1="350" x2="350" y2="200" stroke="#22C55E" stroke-width="2" marker-end="url(#arrowhead)"/>
+  
+  <line x1="850" y1="350" x2="950" y2="350" stroke="#F59E0B" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="950" y1="350" x2="950" y2="200" stroke="#F59E0B" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="950" y1="200" x2="850" y2="200" stroke="#F59E0B" stroke-width="2" marker-end="url(#arrowhead)"/>
+  
+  <!-- History Stack -->
+  <g transform="translate(50, 450)">
+    <rect width="200" height="150" rx="8" fill="#1E293B" stroke="#EC4899" stroke-width="2"/>
+    <text x="100" y="30" text-anchor="middle" fill="#F8FAFC" font-size="14" font-weight="600" font-family="Inter, sans-serif">History Stack</text>
+    <text x="100" y="55" text-anchor="middle" fill="#94A3B8" font-size="11" font-family="Inter, sans-serif">Command Pattern</text>
+    <rect x="30" y="70" width="140" height="20" rx="4" fill="#334155"/>
+    <text x="100" y="84" text-anchor="middle" fill="#F8FAFC" font-size="10" font-family="Inter, sans-serif">State t-2</text>
+    <rect x="30" y="95" width="140" height="20" rx="4" fill="#334155"/>
+    <text x="100" y="109" text-anchor="middle" fill="#F8FAFC" font-size="10" font-family="Inter, sans-serif">State t-1</text>
+    <rect x="30" y="120" width="140" height="20" rx="4" fill="#6366F1"/>
+    <text x="100" y="134" text-anchor="middle" fill="#F8FAFC" font-size="10" font-family="Inter, sans-serif">State t (current)</text>
+  </g>
+  
+  <!-- Design Tokens -->
+  <g transform="translate(950, 450)">
+    <rect width="200" height="150" rx="8" fill="#1E293B" stroke="#3B82F6" stroke-width="2"/>
+    <text x="100" y="30" text-anchor="middle" fill="#F8FAFC" font-size="14" font-weight="600" font-family="Inter, sans-serif">Design Tokens</text>
+    <text x="100" y="55" text-anchor="middle" fill="#94A3B8" font-size="11" font-family="Inter, sans-serif">Colors (Tailwind)</text>
+    <text x="100" y="75" text-anchor="middle" fill="#94A3B8" font-size="11" font-family="Inter, sans-serif">Spacing (8px grid)</text>
+    <text x="100" y="95" text-anchor="middle" fill="#94A3B8" font-size="11" font-family="Inter, sans-serif">Typography (Inter)</text>
+    <text x="100" y="115" text-anchor="middle" fill="#94A3B8" font-size="11" font-family="Inter, sans-serif">Border Radius</text>
+    <text x="100" y="135" text-anchor="middle" fill="#94A3B8" font-size="11" font-family="Inter, sans-serif">Canvas Settings</text>
+  </g>
+  
+  <!-- Keyboard Shortcuts -->
+  <g transform="translate(350, 520)">
+    <rect width="500" height="80" rx="8" fill="#1E293B" stroke="#8B5CF6" stroke-width="2"/>
+    <text x="250" y="30" text-anchor="middle" fill="#F8FAFC" font-size="14" font-weight="600" font-family="Inter, sans-serif">Keyboard Event System</text>
+    <text x="250" y="55" text-anchor="middle" fill="#94A3B8" font-size="11" font-family="Inter, sans-serif">Global shortcuts | Focus trap | ARIA live regions</text>
+  </g>
+  
+  <!-- Arrow from keyboard to store -->
+  <line x1="600" y1="520" x2="600" y2="450" stroke="#8B5CF6" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="600" y1="450" x2="450" y2="410" stroke="#8B5CF6" stroke-width="2" marker-end="url(#arrowhead)"/>
+  
+  <!-- Legend -->
+  <g transform="translate(50, 650)">
+    <text x="0" y="0" fill="#F8FAFC" font-size="14" font-weight="600" font-family="Inter, sans-serif">Legend:</text>
+    
+    <rect x="0" y="15" width="20" height="20" rx="4" fill="#1E293B" stroke="#6366F1" stroke-width="2"/>
+    <text x="30" y="30" fill="#94A3B8" font-size="12" font-family="Inter, sans-serif">React Components</text>
+    
+    <rect x="150" y="15" width="20" height="20" rx="4" fill="#1E293B" stroke="#22C55E" stroke-width="2"/>
+    <text x="180" y="30" fill="#94A3B8" font-size="12" font-family="Inter, sans-serif">State Management</text>
+    
+    <rect x="320" y="15" width="20" height="20" rx="4" fill="#1E293B" stroke="#F59E0B" stroke-width="2"/>
+    <text x="350" y="30" fill="#94A3B8" font-size="12" font-family="Inter, sans-serif">Rendering Engine</text>
+    
+    <rect x="520" y="15" width="20" height="20" rx="4" fill="#1E293B" stroke="#EC4899" stroke-width="2"/>
+    <text x="550" y="30" fill="#94A3B8" font-size="12" font-family="Inter, sans-serif">History</text>
+    
+    <rect x="650" y="15" width="20" height="20" rx="4" fill="#1E293B" stroke="#3B82F6" stroke-width="2"/>
+    <text x="680" y="30" fill="#94A3B8" font-size="12" font-family="Inter, sans-serif">Design System</text>
+  </g>
+  
+  <!-- Flow indicator -->
+  <text x="600" y="720" text-anchor="middle" fill="#64748B" font-size="12" font-family="Inter, sans-serif">Data Flow: User Input → React Components → Zustand Store → React Konva → Canvas Rendering</text>
+</svg>

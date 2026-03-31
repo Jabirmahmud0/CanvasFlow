@@ -1,0 +1,31 @@
+{
+  "canvas": {
+    "minZoom": { "value": "0.05" },
+    "maxZoom": { "value": "5" },
+    "defaultZoom": { "value": "1" },
+    "zoomStep": { "value": "0.1" },
+    "gridSize": { "value": "20px" },
+    "snapThreshold": { "value": "10px" }
+  },
+  "animation": {
+    "duration": {
+      "fast": { "value": "150ms" },
+      "normal": { "value": "200ms" },
+      "slow": { "value": "300ms" }
+    },
+    "easing": {
+      "linear": { "value": "linear" },
+      "ease": { "value": "ease" },
+      "easeIn": { "value": "cubic-bezier(0.4, 0, 1, 1)" },
+      "easeOut": { "value": "cubic-bezier(0, 0, 0.2, 1)" },
+      "easeInOut": { "value": "cubic-bezier(0.4, 0, 0.2, 1)" }
+    }
+  },
+  "breakpoint": {
+    "sm": { "value": "640px" },
+    "md": { "value": "768px" },
+    "lg": { "value": "1024px" },
+    "xl": { "value": "1280px" },
+    "2xl": { "value": "1536px" }
+  }
+}
