@@ -8,23 +8,9 @@ export const ThemeProvider = ({ children }) => {
   });
 
   useEffect(() => {
-    const root = document.documentElement;
-    root.classList.remove('dark', 'light', 'high-contrast');
-    root.classList.add(theme);
+    document.documentElement.className = theme;
     localStorage.setItem('canvasflow-theme', theme);
   }, [theme]);
-
-  // Handle system preference changes if no manual override
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: light)');
-    const handleChange = (e) => {
-      if (!localStorage.getItem('canvasflow-theme')) {
-        setTheme(e.matches ? 'light' : 'dark');
-      }
-    };
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>

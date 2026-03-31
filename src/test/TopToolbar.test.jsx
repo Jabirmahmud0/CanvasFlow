@@ -1,4 +1,3 @@
-import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import TopToolbar from '@/components/panels/TopToolbar';
 import { useCanvasStore } from '@/store/useCanvasStore';
@@ -7,6 +6,12 @@ import { useCanvasStore } from '@/store/useCanvasStore';
 vi.mock('@/store/useCanvasStore', () => ({
   useCanvasStore: vi.fn(),
 }));
+
+// Mock useTheme hook
+vi.mock('@/hooks/useTheme', () => ({
+  useTheme: vi.fn(() => ({ theme: 'dark', setTheme: vi.fn() })),
+}));
+
 
 describe('TopToolbar', () => {
   const mockStore = {

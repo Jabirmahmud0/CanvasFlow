@@ -96,6 +96,43 @@ const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
 
   const { theme, setTheme } = useTheme();
 
+  // Close menus when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (fileMenuRef.current && !fileMenuRef.current.contains(e.target)) {
+        setShowFileMenu(false);
+      }
+      if (viewMenuRef.current && !viewMenuRef.current.contains(e.target)) {
+        setShowViewMenu(false);
+      }
+      if (themeMenuRef.current && !themeMenuRef.current.contains(e.target)) {
+        setShowThemeMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Toggle functions
+  const toggleFileMenu = () => {
+    setShowFileMenu(prev => !prev);
+    setShowViewMenu(false);
+    setShowThemeMenu(false);
+  };
+
+  const toggleViewMenu = () => {
+    setShowViewMenu(prev => !prev);
+    setShowFileMenu(false);
+    setShowThemeMenu(false);
+  };
+
+  const toggleThemeMenu = () => {
+    setShowThemeMenu(prev => !prev);
+    setShowFileMenu(false);
+    setShowViewMenu(false);
+  };
+
   // Calculate menu positions when opened
   useEffect(() => {
     if (showFileMenu && fileMenuRef.current) {
@@ -209,7 +246,7 @@ const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
         <div className="relative">
           <button
             ref={fileMenuRef}
-            onClick={() => setShowFileMenu(!showFileMenu)}
+            onClick={toggleFileMenu}
             className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-300 hover:text-white hover:bg-slate-800 rounded-md transition-colors"
             aria-label="File menu"
             aria-expanded={showFileMenu}
@@ -272,7 +309,7 @@ const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
         <div className="relative">
           <button
             ref={viewMenuRef}
-            onClick={() => setShowViewMenu(!showViewMenu)}
+            onClick={toggleViewMenu}
             className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-300 hover:text-white hover:bg-slate-800 rounded-md transition-colors"
             aria-label="View menu"
             aria-expanded={showViewMenu}
@@ -391,7 +428,7 @@ const TopToolbar = ({ onConfirmLoadSamples, onConfirmClear }) => {
         <div className="relative">
           <button
             ref={themeMenuRef}
-            onClick={() => setShowThemeMenu(!showThemeMenu)}
+            onClick={toggleThemeMenu}
             className="flex items-center justify-center p-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
             title="Theme Settings"
             aria-label="Theme settings"
