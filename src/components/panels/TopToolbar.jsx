@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  MousePointer2, 
-  Square, 
-  Circle, 
-  Type, 
+import {
+  MousePointer2,
+  Square,
+  Circle,
+  Type,
   Hand,
   Minus,
   ArrowRight,
   Star,
   Hexagon,
-  ZoomIn, 
-  ZoomOut, 
+  ZoomIn,
+  ZoomOut,
   Grid3X3,
   Magnet,
   Undo2,
@@ -31,6 +31,7 @@ import {
 import { useCanvasStore } from '@/store/useCanvasStore';
 import { useTheme } from '@/hooks/useTheme';
 import { TOOLS, TOOL_CONFIG, COLORS } from '@/constants';
+import Portal from '@/components/ui/Portal';
 
 const ToolButton = ({ tool, activeTool, onClick, icon: Icon, label, shortcut }) => (
   <motion.button
@@ -87,8 +88,29 @@ const TopToolbar = () => {
   const [showFileMenu, setShowFileMenu] = useState(false);
   const [showViewMenu, setShowViewMenu] = useState(false);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
-  
+  const [menuPositions, setMenuPositions] = useState({});
+
+  const fileMenuRef = useRef(null);
+  const viewMenuRef = useRef(null);
+  const themeMenuRef = useRef(null);
+
   const { theme, setTheme } = useTheme();
+
+  // Calculate menu positions when opened
+  useEffect(() => {
+    if (showFileMenu && fileMenuRef.current) {
+      const rect = fileMenuRef.current.getBoundingClientRect();
+      setMenuPositions(prev => ({ ...prev, file: { top: rect.bottom, left: rect.left } }));
+    }
+    if (showViewMenu && viewMenuRef.current) {
+      const rect = viewMenuRef.current.getBoundingClientRect();
+      setMenuPositions(prev => ({ ...prev, view: { top: rect.bottom, left: rect.left } }));
+    }
+    if (showThemeMenu && themeMenuRef.current) {
+      const rect = themeMenuRef.current.getBoundingClientRect();
+      setMenuPositions(prev => ({ ...prev, theme: { top: rect.bottom, right: window.innerWidth - rect.right } }));
+    }
+  }, [showFileMenu, showViewMenu, showThemeMenu]);
   
   const {
     activeTool,
@@ -190,6 +212,7 @@ const TopToolbar = () => {
         {/* File Menu */}
         <div className="relative">
           <button
+            ref={fileMenuRef}
             onClick={() => setShowFileMenu(!showFileMenu)}
             className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-300 hover:text-white hover:bg-slate-800 rounded-md transition-colors"
             aria-label="File menu"
@@ -200,14 +223,16 @@ const TopToolbar = () => {
             <ChevronDown size={14} aria-hidden="true" />
           </button>
           <AnimatePresence>
-            {showFileMenu && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute top-full left-0 mt-1 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-[9999] py-1"
-                role="menu"
-              >
+            {showFileMenu && menuPositions.file && (
+              <Portal>
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  style={{ position: 'fixed', top: menuPositions.file.top, left: menuPositions.file.left }}
+                  className="w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-[9999] py-1"
+                  role="menu"
+                >
                 <button
                   onClick={handleExport}
                   className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
@@ -242,6 +267,7 @@ const TopToolbar = () => {
                   Clear Canvas
                 </button>
               </motion.div>
+            </Portal>
             )}
           </AnimatePresence>
         </div>
@@ -249,6 +275,7 @@ const TopToolbar = () => {
         {/* View Menu */}
         <div className="relative">
           <button
+            ref={viewMenuRef}
             onClick={() => setShowViewMenu(!showViewMenu)}
             className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-300 hover:text-white hover:bg-slate-800 rounded-md transition-colors"
             aria-label="View menu"
@@ -259,14 +286,16 @@ const TopToolbar = () => {
             <ChevronDown size={14} aria-hidden="true" />
           </button>
           <AnimatePresence>
-            {showViewMenu && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute top-full left-0 mt-1 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-[9999] py-1"
-                role="menu"
-              >
+            {showViewMenu && menuPositions.view && (
+              <Portal>
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  style={{ position: 'fixed', top: menuPositions.view.top, left: menuPositions.view.left }}
+                  className="w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-[9999] py-1"
+                  role="menu"
+                >
                 <button
                   onClick={() => { toggleGrid(); setShowViewMenu(false); }}
                   className="w-full flex items-center justify-between px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
@@ -310,6 +339,7 @@ const TopToolbar = () => {
                   Center Canvas
                 </button>
               </motion.div>
+            </Portal>
             )}
           </AnimatePresence>
         </div>
@@ -364,6 +394,7 @@ const TopToolbar = () => {
         {/* Theme Menu */}
         <div className="relative">
           <button
+            ref={themeMenuRef}
             onClick={() => setShowThemeMenu(!showThemeMenu)}
             className="flex items-center justify-center p-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
             title="Theme Settings"
@@ -372,14 +403,16 @@ const TopToolbar = () => {
             {theme === 'light' ? <Sun size={18} /> : theme === 'high-contrast' ? <Palette size={18} /> : <Moon size={18} />}
           </button>
           <AnimatePresence>
-            {showThemeMenu && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                className="absolute top-full right-0 mt-2 w-40 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-[9999] py-1"
-                role="menu"
-              >
+            {showThemeMenu && menuPositions.theme && (
+              <Portal>
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  style={{ position: 'fixed', top: menuPositions.theme.top, right: menuPositions.theme.right }}
+                  className="w-40 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-[9999] py-1"
+                  role="menu"
+                >
                 <button
                   onClick={() => { setTheme('dark'); setShowThemeMenu(false); }}
                   className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-colors ${theme === 'dark' ? 'text-indigo-400 bg-slate-700/50' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
@@ -405,6 +438,7 @@ const TopToolbar = () => {
                   {theme === 'high-contrast' && <span>✓</span>}
                 </button>
               </motion.div>
+            </Portal>
             )}
           </AnimatePresence>
         </div>
