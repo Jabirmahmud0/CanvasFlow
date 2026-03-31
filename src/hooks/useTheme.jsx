@@ -1,59 +1,29 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-const ThemeContext = createContext({
-  theme: 'dark', // 'dark', 'light', 'high-contrast'
-  setTheme: () => null,
-});
+const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
-    // Check local storage first
-    const savedTheme = localStorage.getItem('canvasflow-theme');
-    if (savedTheme) return savedTheme;
-    
-    // Check OS preference
-    if (window.matchMedia && window.matchMedia('(prefers-contrast: more)').matches) {
-      return 'high-contrast';
-    }
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-      return 'light';
-    }
-    
-    return 'dark'; // Default
+    return localStorage.getItem('canvasflow-theme') || 'dark';
   });
 
   useEffect(() => {
-    // Remove existing theme classes
-    document.documentElement.classList.remove('theme-dark', 'theme-light', 'theme-high-contrast');
-    
-    // Add new theme class
-    document.documentElement.classList.add(`theme-${theme}`);
-    
-    // Set color-scheme for native elements
-    document.documentElement.style.colorScheme = theme === 'light' ? 'light' : 'dark';
-    
-    // For Tailwind standard dark mode compat
-    if (theme === 'dark' || theme === 'high-contrast') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    
-    // Save to local storage
+    const root = document.documentElement;
+    root.classList.remove('dark', 'light', 'high-contrast');
+    root.classList.add(theme);
     localStorage.setItem('canvasflow-theme', theme);
   }, [theme]);
 
-  // Listen for system changes if no explicit preference is set
+  // Handle system preference changes if no manual override
   useEffect(() => {
-    const handleContrastChange = (e) => {
-      if (e.matches && !localStorage.getItem('canvasflow-theme')) {
-        setTheme('high-contrast');
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: light)');
+    const handleChange = (e) => {
+      if (!localStorage.getItem('canvasflow-theme')) {
+        setTheme(e.matches ? 'light' : 'dark');
       }
     };
-    
-    const mql = window.matchMedia('(prefers-contrast: more)');
-    mql.addEventListener('change', handleContrastChange);
-    return () => mql.removeEventListener('change', handleContrastChange);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
   return (
@@ -63,10 +33,4 @@ export const ThemeProvider = ({ children }) => {
   );
 };
 
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
-};
+export const useTheme = () => useContext(ThemeContext);
