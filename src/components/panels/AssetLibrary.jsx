@@ -9,8 +9,8 @@ import { COLORS } from '@/constants';
 
 const ASSET_CATEGORIES = [
   { id: 'shapes', label: 'Shapes', icon: Square },
-  { id: 'ui',     label: 'UI Components', icon: Layout },
-  { id: 'icons',  label: 'Icons', icon: MousePointer2 },
+  { id: 'ui',     label: 'UI',     icon: Layout },
+  { id: 'ai',     label: 'AI',     icon: Sparkles },
 ];
 
 const PRESET_ASSETS = {
@@ -30,7 +30,7 @@ const PRESET_ASSETS = {
     { type: 'circle',    label: 'Avatar', icon: Circle, defaultProps: { radius: 32, fill: '#334155', stroke: '#475569', strokeWidth: 2, name: 'Avatar' } },
     { type: 'rectangle', label: 'Input Field', icon: Type, defaultProps: { width: 280, height: 44, fill: 'transparent', cornerRadius: 6, stroke: '#475569', strokeWidth: 1, name: 'Input' } },
   ],
-  icons: [
+  ai: [
     { type: 'text', label: 'Icon Label', icon: Sparkles, defaultProps: { text: '✨', fontSize: 40, fill: '#FFFFFF' } },
   ]
 };
@@ -48,17 +48,23 @@ const AssetLibrary = () => {
     e.dataTransfer.setData('application/json', JSON.stringify(payload));
     e.dataTransfer.effectAllowed = 'copy';
     
-    // Create a ghost image for dragging
+    // Create a very subtle ghost image for dragging
     const ghost = document.createElement('div');
-    ghost.style.width = '40px';
-    ghost.style.height = '40px';
-    ghost.style.background = 'var(--primary)';
-    ghost.style.borderRadius = '8px';
+    ghost.style.width = '30px';
+    ghost.style.height = '30px';
+    ghost.style.background = 'rgba(99, 102, 241, 0.2)'; // Faint version of primary
+    ghost.style.border = '1px dashed #6366F1';
+    ghost.style.borderRadius = asset.type === 'circle' ? '50%' : '4px';
     ghost.style.position = 'absolute';
     ghost.style.top = '-1000px';
     document.body.appendChild(ghost);
-    e.dataTransfer.setDragImage(ghost, 20, 20);
-    setTimeout(() => document.body.removeChild(ghost), 0);
+    
+    e.dataTransfer.setDragImage(ghost, 15, 15);
+    
+    // Cleanup ghost element after a short delay
+    setTimeout(() => {
+      document.body.removeChild(ghost);
+    }, 0);
   };
 
   const filteredAssets = (PRESET_ASSETS[activeCategory] || []).filter(asset => 
@@ -82,7 +88,7 @@ const AssetLibrary = () => {
       </div>
 
       {/* ── Categories ── */}
-      <div className="flex gap-1 p-1.5 overflow-x-auto no-scrollbar border-b border-border/40 bg-secondary/10 shrink-0">
+      <div className="flex gap-1 px-2 py-1.5 overflow-x-auto no-scrollbar border-b border-border/40 bg-secondary/10 shrink-0">
         {ASSET_CATEGORIES.map(category => {
           const isActive = activeCategory === category.id;
           const Icon = category.icon;
@@ -90,13 +96,13 @@ const AssetLibrary = () => {
             <button
               key={category.id}
               onClick={() => setActiveCategory(category.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium whitespace-nowrap transition-all
+              className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[10.5px] font-medium whitespace-nowrap transition-all
                 ${isActive
                   ? 'bg-background text-primary shadow-sm border border-border/50'
                   : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
                 }`}
             >
-              <Icon size={12} strokeWidth={isActive ? 2.5 : 1.8} />
+              <Icon size={14} strokeWidth={isActive ? 2 : 1.5} />
               {category.label}
             </button>
           );

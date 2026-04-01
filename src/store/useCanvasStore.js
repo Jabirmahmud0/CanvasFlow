@@ -137,7 +137,7 @@ export const useCanvasStore = create(
 
     // ============ Element Actions ============
     
-    addElement: (element) => {
+    addElement: (element, select = true) => {
       const newElement = {
         id: generateId(),
         ...element,
@@ -150,14 +150,14 @@ export const useCanvasStore = create(
       
       set((state) => ({
         elements: [...state.elements, newElement],
-        selectedIds: [newElement.id],
+        selectedIds: select ? [newElement.id] : state.selectedIds,
       }));
       
       get().addToHistory();
       return newElement.id;
     },
     
-    addElements: (newElements) => {
+    addElements: (newElements, select = true) => {
       const elementsWithIds = newElements.map((el) => ({
         ...el,
         id: generateId(),
@@ -170,7 +170,7 @@ export const useCanvasStore = create(
       
       set((state) => ({
         elements: [...state.elements, ...elementsWithIds],
-        selectedIds: elementsWithIds.map((el) => el.id),
+        selectedIds: select ? elementsWithIds.map((el) => el.id) : state.selectedIds,
       }));
       
       get().addToHistory();

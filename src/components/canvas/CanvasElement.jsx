@@ -110,9 +110,11 @@ const CanvasElement = ({
     // Add selection indicator via stroke only if the element doesn't have its own stroke
     // Or better, let Transformer handle the selection UI entirely.
     // We'll keep a soft glow for selection.
-    shadowColor: isSelected ? COLORS.selectionBorder : 'transparent',
-    shadowBlur: isSelected ? 4 : 0,
-    shadowOpacity: isSelected ? 0.8 : 0,
+    // We'll remove the selection shadow entirely to avoid the "inside a box" feeling.
+    // The Transformer already handles selection visuals.
+    shadowColor: 'transparent',
+    shadowBlur: 0,
+    shadowOpacity: 0,
     strokeScaleEnabled: false, // Prevent stroke stretching
   };
 

@@ -289,7 +289,7 @@ const Canvas = ({ width, height }) => {
         fontFamily: 'Inter, sans-serif',
       };
 
-      const id = addElement(newElement);
+      const id = addElement(newElement, false);
 
       // Switch to select tool after adding
       setActiveTool(TOOLS.SELECT);
@@ -495,7 +495,7 @@ const Canvas = ({ width, height }) => {
 
       if (filteredPoints.length >= 4) {
         addElement({
-          type,
+          type: activeTool === TOOLS.PEN ? 'pen' : 'brush',
           x: drawingCurrent.x,
           y: drawingCurrent.y,
           points: filteredPoints,
@@ -504,7 +504,7 @@ const Canvas = ({ width, height }) => {
           opacity: drawingSettings.opacity,
           tension: drawingSettings.tension ?? 0.5,
           zIndex: elements.length,
-        });
+        }, false);
       }
       setDrawingCurrent(null);
       clearSelection(); // Clear selection so the next stroke can be configured independently
@@ -527,7 +527,7 @@ const Canvas = ({ width, height }) => {
               fill: DEFAULT_PROPERTIES.rectangle.fill,
               stroke: DEFAULT_PROPERTIES.rectangle.stroke,
               strokeWidth: DEFAULT_PROPERTIES.rectangle.strokeWidth,
-            });
+            }, false);
             setActiveTool(TOOLS.SELECT);
             break;
           case TOOLS.CIRCLE:
@@ -539,7 +539,7 @@ const Canvas = ({ width, height }) => {
               fill: DEFAULT_PROPERTIES.circle.fill,
               stroke: DEFAULT_PROPERTIES.circle.stroke,
               strokeWidth: DEFAULT_PROPERTIES.circle.strokeWidth,
-            });
+            }, false);
             setActiveTool(TOOLS.SELECT);
             break;
           case TOOLS.LINE:
@@ -550,7 +550,7 @@ const Canvas = ({ width, height }) => {
               points: [0, 0, width, height],
               stroke: DEFAULT_PROPERTIES.line.stroke,
               strokeWidth: DEFAULT_PROPERTIES.line.strokeWidth,
-            });
+            }, false);
             setActiveTool(TOOLS.SELECT);
             break;
           case TOOLS.ARROW:
@@ -564,7 +564,7 @@ const Canvas = ({ width, height }) => {
               pointerLength: DEFAULT_PROPERTIES.arrow.pointerLength,
               pointerWidth: DEFAULT_PROPERTIES.arrow.pointerWidth,
               fill: DEFAULT_PROPERTIES.arrow.fill,
-            });
+            }, false);
             setActiveTool(TOOLS.SELECT);
             break;
           case TOOLS.STAR:
@@ -578,7 +578,7 @@ const Canvas = ({ width, height }) => {
               fill: DEFAULT_PROPERTIES.star.fill,
               stroke: DEFAULT_PROPERTIES.star.stroke,
               strokeWidth: DEFAULT_PROPERTIES.star.strokeWidth,
-            });
+            }, false);
             setActiveTool(TOOLS.SELECT);
             break;
           case TOOLS.POLYGON:
@@ -591,7 +591,7 @@ const Canvas = ({ width, height }) => {
               fill: DEFAULT_PROPERTIES.polygon.fill,
               stroke: DEFAULT_PROPERTIES.polygon.stroke,
               strokeWidth: DEFAULT_PROPERTIES.polygon.strokeWidth,
-            });
+            }, false);
             setActiveTool(TOOLS.SELECT);
             break;
         }
@@ -788,13 +788,12 @@ const Canvas = ({ width, height }) => {
           y -= height / 2;
         }
 
-        const id = addElement({
+        addElement({
           type: data.elementType,
           x,
           y,
           ...data.props
-        });
-        selectElement(id);
+        }, false);
       }
     } catch (err) {
       // Not a valid JSON payload, ignore
