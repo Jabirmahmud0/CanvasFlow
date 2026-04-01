@@ -23,23 +23,39 @@ const NumInput = ({ label, value, onChange, min, max, step = 1, unit = '' }) => 
   const [localVal, setLocalVal] = useState(value);
   
   React.useEffect(() => {
-    setLocalVal(typeof value === 'number' ? Math.round(value * 100) / 100 : value);
+    // Only update localVal if it's numerically different from value
+    // This prevents wiping out partial inputs like "1." or "-"
+    const roundedValue = typeof value === 'number' ? Math.round(value * 100) / 100 : value;
+    if (localVal === undefined || localVal === '' || Number(localVal) !== roundedValue) {
+      setLocalVal(roundedValue);
+    }
   }, [value]);
 
   const commit = () => {
     const num = Number(localVal);
     if (!isNaN(num)) {
-      if (min !== undefined && num < min) {
-        setLocalVal(min);
-        onChange(min);
-      } else if (max !== undefined && num > max) {
-        setLocalVal(max);
-        onChange(max);
-      } else {
-        onChange(num);
-      }
+      let finalNum = num;
+      if (min !== undefined && num < min) finalNum = min;
+      if (max !== undefined && num > max) finalNum = max;
+      
+      setLocalVal(Math.round(finalNum * 100) / 100);
+      onChange(finalNum);
     } else {
       setLocalVal(typeof value === 'number' ? Math.round(value * 100) / 100 : value);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const nextVal = e.target.value;
+    setLocalVal(nextVal);
+    
+    const num = Number(nextVal);
+    if (nextVal !== '' && nextVal !== '-' && !isNaN(num)) {
+      // For live updates, we don't necessarily want to clamp strictly while typing
+      // as it can prevent typing certain sequences (e.g. if min is 10 and you want to type 100, 
+      // typing '1' would clamp to 10 immediately).
+      // However, for certain properties like strokeWidth, 0 might be okay.
+      onChange(num);
     }
   };
 
@@ -48,7 +64,7 @@ const NumInput = ({ label, value, onChange, min, max, step = 1, unit = '' }) => 
     if (isNaN(num)) num = typeof value === 'number' ? value : 0;
     let finalNum = num + step;
     if (max !== undefined && finalNum > max) finalNum = max;
-    setLocalVal(typeof finalNum === 'number' ? Math.round(finalNum * 1000) / 1000 : finalNum);
+    setLocalVal(Math.round(finalNum * 1000) / 1000);
     onChange(finalNum);
   };
 
@@ -57,7 +73,7 @@ const NumInput = ({ label, value, onChange, min, max, step = 1, unit = '' }) => 
     if (isNaN(num)) num = typeof value === 'number' ? value : 0;
     let finalNum = num - step;
     if (min !== undefined && finalNum < min) finalNum = min;
-    setLocalVal(typeof finalNum === 'number' ? Math.round(finalNum * 1000) / 1000 : finalNum);
+    setLocalVal(Math.round(finalNum * 1000) / 1000);
     onChange(finalNum);
   };
 
@@ -70,7 +86,7 @@ const NumInput = ({ label, value, onChange, min, max, step = 1, unit = '' }) => 
         min={min}
         max={max}
         step={step}
-        onChange={(e) => setLocalVal(e.target.value)}
+        onChange={handleInputChange}
         onBlur={commit}
         onKeyDown={(e) => {
           if (e.key === 'Enter') commit();
