@@ -26,9 +26,9 @@ export const ThemeProvider = ({ children }) => {
     // Update meta theme-color for mobile browsers
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     const themeColors = {
-      dark: '#0B0F1A',
+      dark: '#0D0D0D',
       light: '#F8FAFC',
-      'high-contrast': '#0D0D0D',
+      'high-contrast': '#000000',
     };
     if (metaThemeColor) {
       metaThemeColor.setAttribute('content', themeColors[newTheme]);
@@ -86,14 +86,14 @@ export const ThemeProvider = ({ children }) => {
     themes: VALID_THEMES,
     // Canvas colors derived from theme
     canvasBackground: {
-      dark: '#0B0F1A',
+      dark: '#0D0D0D',
       light: '#F0F4F8',
-      'high-contrast': '#080808',
+      'high-contrast': '#000000',
     }[theme],
     gridColor: {
       dark: '#1E2A3B',
       light: '#C8D3E0',
-      'high-contrast': '#2A2A2A',
+      'high-contrast': '#555555',
     }[theme],
   };
 

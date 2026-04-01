@@ -281,7 +281,7 @@ const CanvasElement = ({
           }}
           anchorSize={8}
           anchorCornerRadius={2}
-          anchorFill="#1E293B"
+          anchorFill="#1A1A1A"
           anchorStroke="#6366F1"
           anchorStrokeWidth={1}
           borderStroke="#6366F1"

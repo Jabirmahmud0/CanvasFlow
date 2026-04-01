@@ -3,11 +3,11 @@
 // Color Palette
 export const COLORS = {
   // Canvas Theme
-  canvasBg: '#0F172A', // slate-900
-  canvasGrid: '#1E293B', // slate-800
+  canvasBg: '#111111', // slate-900
+  canvasGrid: '#222222', // slate-800
   
   // Surface Layers
-  surfacePrimary: '#1E293B', // slate-800
+  surfacePrimary: '#1F1F1F', // slate-800
   surfaceSecondary: '#334155', // slate-700
   surfaceTertiary: '#475569', // slate-600
   
@@ -47,8 +47,8 @@ export const PRESET_COLORS = [
   '#06B6D4', // Cyan
   '#14B8A6', // Teal
   '#84CC16', // Lime
-  '#0F172A', // Slate-900
-  '#1E293B', // Slate-800
+  '#111111', // Slate-900
+  '#1F1F1F', // Slate-800
   '#334155', // Slate-700
   '#475569', // Slate-600
   '#94A3B8', // Slate-400
@@ -62,7 +62,7 @@ export const GRADIENT_PRESETS = [
   'linear-gradient(135deg, #3B82F6 0%, #06B6D4 100%)',
   'linear-gradient(135deg, #22C55E 0%, #14B8A6 100%)',
   'linear-gradient(135deg, #F59E0B 0%, #EF4444 100%)',
-  'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)',
+  'linear-gradient(135deg, #1F1F1F 0%, #111111 100%)',
 ];
 
 // Spacing System (8px base)

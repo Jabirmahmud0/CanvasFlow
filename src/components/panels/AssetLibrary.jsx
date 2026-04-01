@@ -26,7 +26,7 @@ const PRESET_ASSETS = {
   ],
   ui: [
     { type: 'rectangle', label: 'Primary Button', icon: Square, defaultProps: { width: 140, height: 48, fill: '#6366F1', cornerRadius: 8, name: 'Button' } },
-    { type: 'rectangle', label: 'Card Base', icon: Square, defaultProps: { width: 240, height: 320, fill: '#1E293B', cornerRadius: 16, stroke: '#334155', strokeWidth: 1, name: 'Card' } },
+    { type: 'rectangle', label: 'Card Base', icon: Square, defaultProps: { width: 240, height: 320, fill: '#1A1A1A', cornerRadius: 16, stroke: '#334155', strokeWidth: 1, name: 'Card' } },
     { type: 'circle',    label: 'Avatar', icon: Circle, defaultProps: { radius: 32, fill: '#334155', stroke: '#475569', strokeWidth: 2, name: 'Avatar' } },
     { type: 'rectangle', label: 'Input Field', icon: Type, defaultProps: { width: 280, height: 44, fill: 'transparent', cornerRadius: 6, stroke: '#475569', strokeWidth: 1, name: 'Input' } },
   ],

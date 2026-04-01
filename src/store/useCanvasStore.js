@@ -38,7 +38,7 @@ const initialState = {
   showGrid: false,
   snapToGrid: true,
   showSmartGuides: true,
-  canvasBackground: '#0F172A',
+  canvasBackground: '#111111',
   
   // Editing
   editingElementId: null,
@@ -771,7 +771,7 @@ export const useCanvasStore = create(
           y: 200,
           width: 200,
           height: 150,
-          fill: '#1E293B',
+          fill: '#1A1A1A',
           stroke: '#334155',
           strokeWidth: 2,
           cornerRadius: 8,
@@ -831,7 +831,7 @@ export const useCanvasStore = create(
           y: 420,
           width: 250,
           height: 120,
-          fill: '#0F172A',
+          fill: '#111111',
           stroke: '#475569',
           strokeWidth: 1,
           cornerRadius: 8,

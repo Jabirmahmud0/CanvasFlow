@@ -21,13 +21,13 @@ export class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     // Log error to Sentry
-    Sentry.captureException(error, {
+    const eventId = Sentry.captureException(error, {
       extra: {
         componentStack: errorInfo.componentStack,
       },
-    }).then((eventId) => {
-      this.setState({ eventId });
     });
+    
+    this.setState({ eventId });
 
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {

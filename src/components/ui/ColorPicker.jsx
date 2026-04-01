@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Pipette, ChevronDown } from 'lucide-react';
+import Portal from './Portal';
 
 /* ─── Color utilities ─── */
 const hexToHsl = (hex) => {
@@ -33,13 +34,25 @@ const hslToHex = (h, s, l) => {
   return `#${f(0)}${f(8)}${f(4)}`;
 };
 
+const hexToRgb = (hex) => {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return [r, g, b];
+};
+
+const rgbToHex = (r, g, b) => {
+  const f = (n) => Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, '0');
+  return `#${f(r)}${f(g)}${f(b)}`;
+};
+
 const isValidHex = (hex) => /^#[0-9A-Fa-f]{6}$/.test(hex);
 
 /* ─── Preset swatches ─── */
 const PRESET_COLORS = [
   '#6366F1','#8B5CF6','#EC4899','#EF4444',
   '#F59E0B','#22C55E','#3B82F6','#06B6D4',
-  '#14B8A6','#84CC16','#0F172A','#1E293B',
+  '#14B8A6','#84CC16','#111111','#1F1F1F',
   '#475569','#94A3B8','#FFFFFF','#000000',
 ];
 
@@ -153,24 +166,44 @@ const HueSlider = ({ hue, onChange }) => {
 /* ─── Main Color Picker ─── */
 const ColorPicker = ({ color = '#6366F1', onChange, label = 'Color' }) => {
   const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState('RGB');
   const [hexInput, setHexInput] = useState(color);
   const [recent, setRecent] = useState(getRecent);
   const popoverRef = useRef(null);
+  const triggerRef = useRef(null);
+  const [popoverPos, setPopoverPos] = useState({ top: 0, left: 0 });
 
   const safeColor = isValidHex(color) ? color : '#6366F1';
   const [h, s, l] = useMemo(() => hexToHsl(safeColor), [safeColor]);
+  const [r, g, b] = useMemo(() => hexToRgb(safeColor), [safeColor]);
 
   useEffect(() => { setHexInput(color); }, [color]);
 
-  // Close on outside click
+  const updatePosition = useCallback(() => {
+    if (!triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    setPopoverPos({
+      top: rect.bottom + window.scrollY + 8,
+      left: rect.left + window.scrollX - (224 - rect.width),
+    });
+  }, []);
+
   useEffect(() => {
     if (!open) return;
+    updatePosition();
     const handler = (e) => {
+      if (triggerRef.current?.contains(e.target)) return;
       if (!popoverRef.current?.contains(e.target)) setOpen(false);
     };
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
     document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+      document.removeEventListener('mousedown', handler);
+    };
+  }, [open, updatePosition]);
 
   const pick = useCallback((newColor) => {
     onChange(newColor);
@@ -186,6 +219,10 @@ const ColorPicker = ({ color = '#6366F1', onChange, label = 'Color' }) => {
     pick(hslToHex(h, newS, newL));
   }, [h, pick]);
 
+  const handleRgbChange = useCallback((newR, newG, newB) => {
+    pick(rgbToHex(newR, newG, newB));
+  }, [pick]);
+
   const handleHexInput = useCallback((val) => {
     setHexInput(val);
     if (isValidHex(val)) pick(val);
@@ -193,9 +230,9 @@ const ColorPicker = ({ color = '#6366F1', onChange, label = 'Color' }) => {
   }, [pick]);
 
   return (
-    <div className="relative" ref={popoverRef}>
-      {/* Swatch trigger */}
+    <div className="relative">
       <button
+        ref={triggerRef}
         type="button"
         className="flex items-center gap-2 w-full hover:bg-accent rounded-md p-1 -m-1 transition-colors"
         onClick={() => setOpen((p) => !p)}
@@ -213,90 +250,108 @@ const ColorPicker = ({ color = '#6366F1', onChange, label = 'Color' }) => {
         <ChevronDown size={12} className={`text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
-      {/* Popover */}
       <AnimatePresence>
         {open && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.94, y: -6 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.94, y: -6 }}
-            transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute right-0 top-full mt-2 z-[9990] w-[224px] glass rounded-xl shadow-2xl shadow-black/50 p-3 flex flex-col gap-3"
-            role="dialog"
-            aria-label="Color picker"
-          >
-            {/* SV picker */}
-            <SVPicker hue={h} s={s} l={l} onChange={handleSLChange} />
+          <Portal>
+            <motion.div
+              ref={popoverRef}
+              initial={{ opacity: 0, scale: 0.94, y: -6 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.94, y: -6 }}
+              transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
+              className="fixed z-[10000] w-[224px] glass rounded-xl shadow-2xl shadow-black/80 p-3 flex flex-col gap-3"
+              style={{
+                top: popoverPos.top,
+                left: popoverPos.left,
+              }}
+              role="dialog"
+              aria-label="Color picker"
+            >
+              <SVPicker hue={h} s={s} l={l} onChange={handleSLChange} />
+              <HueSlider hue={h} onChange={handleHueChange} />
 
-            {/* Hue slider */}
-            <HueSlider hue={h} onChange={handleHueChange} />
-
-            {/* Preview + Hex Input */}
-            <div className="flex items-center gap-2">
-              <div
-                className="w-9 h-9 rounded-lg border border-border flex-shrink-0"
-                style={{ background: safeColor }}
-              />
-              <div className="prop-input flex-1 h-9">
-                <span className="prop-input-label">#</span>
-                <input
-                  type="text"
-                  value={hexInput.replace('#', '')}
-                  onChange={(e) => handleHexInput(e.target.value)}
-                  maxLength={6}
-                  className="!text-left !pl-2"
-                  placeholder="HEX"
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-9 h-9 rounded-lg border border-border flex-shrink-0"
+                  style={{ background: safeColor }}
                 />
-              </div>
-            </div>
-
-            {/* HSL readout */}
-            <div className="grid grid-cols-3 gap-1.5">
-              {[
-                { label: 'H', value: h, max: 360, onChange: (v) => handleHueChange(Number(v)) },
-                { label: 'S', value: s, max: 100, onChange: (v) => handleSLChange(Number(v), l) },
-                { label: 'L', value: l, max: 100, onChange: (v) => handleSLChange(s, Number(v)) },
-              ].map(({ label: lbl, value, max, onChange: onCh }) => (
-                <div key={lbl} className="prop-input h-8">
-                  <span className="prop-input-label">{lbl}</span>
+                <div className="prop-input flex-1 h-9">
+                  <span className="prop-input-label">#</span>
                   <input
-                    type="number"
-                    min={0}
-                    max={max}
-                    value={value}
-                    onChange={(e) => onCh(e.target.value)}
+                    type="text"
+                    value={hexInput.replace('#', '')}
+                    onChange={(e) => handleHexInput(e.target.value)}
+                    maxLength={6}
+                    className="!text-left !pl-2 font-mono text-sm"
+                    placeholder="HEX"
                   />
                 </div>
-              ))}
-            </div>
-
-            {/* Presets */}
-            <div>
-              <p className="panel-section-header mb-1.5">Presets</p>
-              <div className="grid grid-cols-8 gap-1">
-                {PRESET_COLORS.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    className="w-6 h-6 rounded border border-border transition-transform hover:scale-110 focus-visible:ring-1 focus-visible:ring-primary"
-                    style={{ background: c }}
-                    onClick={() => pick(c)}
-                    aria-label={c}
-                  />
-                ))}
               </div>
-            </div>
 
-            {/* Recent */}
-            {recent.length > 0 && (
+              <div className="flex flex-col gap-2 bg-muted/30 p-2 rounded-lg border border-border/40">
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">{mode}</span>
+                  <button
+                    onClick={() => setMode(m => m === 'RGB' ? 'HSL' : 'RGB')}
+                    className="text-[9px] uppercase font-bold text-primary hover:bg-primary/10 px-1.5 py-0.5 rounded transition-colors"
+                  >
+                    Switch
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-3 gap-1.5">
+                  {mode === 'RGB' ? (
+                    <>
+                      {[
+                        { label: 'R', value: r, onChange: (v) => handleRgbChange(v, g, b) },
+                        { label: 'G', value: g, onChange: (v) => handleRgbChange(r, v, b) },
+                        { label: 'B', value: b, onChange: (v) => handleRgbChange(r, g, v) },
+                      ].map(({ label: lbl, value, onChange: onCh }) => (
+                        <div key={lbl} className="prop-input h-8 overflow-hidden">
+                          <span className="prop-input-label !w-3.5 !pl-1.5 flex items-center justify-center">{lbl}</span>
+                          <input
+                            type="number"
+                            min={0}
+                            max={255}
+                            value={value}
+                            onChange={(e) => onCh(Number(e.target.value))}
+                            className="!pl-3.5 text-center"
+                          />
+                        </div>
+                      ))}
+                    </>
+                  ) : (
+                    <>
+                      {[
+                        { label: 'H', value: h, max: 360, onChange: (v) => handleHueChange(v) },
+                        { label: 'S', value: s, max: 100, onChange: (v) => handleSLChange(v, l) },
+                        { label: 'L', value: l, max: 100, onChange: (v) => handleSLChange(s, v) },
+                      ].map(({ label: lbl, value, max, onChange: onCh }) => (
+                        <div key={lbl} className="prop-input h-8 overflow-hidden">
+                          <span className="prop-input-label !w-3.5 !pl-1.5 flex items-center justify-center">{lbl}</span>
+                          <input
+                            type="number"
+                            min={0}
+                            max={max}
+                            value={value}
+                            onChange={(e) => onCh(Number(e.target.value))}
+                            className="!pl-3.5 text-center"
+                          />
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
+              </div>
+
               <div>
-                <p className="panel-section-header mb-1.5">Recent</p>
-                <div className="flex gap-1 flex-wrap">
-                  {recent.slice(0, 8).map((c) => (
+                <p className="panel-section-header mb-1.5 !text-[10px]">Presets</p>
+                <div className="grid grid-cols-8 gap-1">
+                  {PRESET_COLORS.map((c) => (
                     <button
                       key={c}
                       type="button"
-                      className="w-6 h-6 rounded border border-border transition-transform hover:scale-110"
+                      className="w-6 h-6 rounded border border-border/80 transition-transform hover:scale-110 focus-visible:ring-1 focus-visible:ring-primary"
                       style={{ background: c }}
                       onClick={() => pick(c)}
                       aria-label={c}
@@ -304,8 +359,26 @@ const ColorPicker = ({ color = '#6366F1', onChange, label = 'Color' }) => {
                   ))}
                 </div>
               </div>
-            )}
-          </motion.div>
+
+              {recent.length > 0 && (
+                <div>
+                  <p className="panel-section-header mb-1.5 !text-[10px]">Recent</p>
+                  <div className="flex gap-1 flex-wrap">
+                    {recent.slice(0, 8).map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        className="w-6 h-6 rounded border border-border/80 transition-transform hover:scale-110"
+                        style={{ background: c }}
+                        onClick={() => pick(c)}
+                        aria-label={c}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </Portal>
         )}
       </AnimatePresence>
     </div>
