@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { initSentry } from '@/lib/sentry'
-import { initAnalytics } from '@/lib/analytics'
+import { initAnalytics, trackPageView } from '@/lib/analytics'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import './index.css'
 import App from './App.jsx'
@@ -14,6 +14,11 @@ console.log('[App] Sentry error monitoring:', isSentryEnabled ? 'enabled' : 'dis
 // Initialize analytics
 const analytics = initAnalytics()
 console.log('[App] Analytics:', analytics ? 'initialized' : 'disabled')
+
+// Track initial page view
+if (analytics) {
+  trackPageView(window.location.pathname, document.title)
+}
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
