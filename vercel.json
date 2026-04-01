@@ -38,11 +38,5 @@
         }
       ]
     }
-  ],
-  "env": {
-    "VITE_SENTRY_DSN": "@sentry-dsn",
-    "VITE_SENTRY_ENVIRONMENT": "@sentry-environment",
-    "VITE_ANALYTICS_PROVIDER": "@analytics-provider",
-    "VITE_ANALYTICS_ID": "@analytics-id"
-  }
+  ]
 }
