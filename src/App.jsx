@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback, Suspense, lazy } from 
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Undo2, Redo2, Copy, Scissors, Clipboard, Trash2,
-  MousePointer2, Square as SquareIcon, X, Keyboard,
+  MousePointer2, X, Keyboard,
 } from 'lucide-react';
 import { useCanvasStore } from '@/store/useCanvasStore';
 import { useTheme } from '@/hooks/useTheme';
@@ -13,18 +13,27 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { Toaster, toast } from 'sonner';
 import './App.css';
 
-const LeftSidebar  = lazy(() => import('@/components/panels/LeftSidebar'));
+const LeftSidebar = lazy(() => import('@/components/panels/LeftSidebar'));
 const PropertiesPanel = lazy(() => import('@/components/panels/PropertiesPanel'));
 const FloatingToolbar = lazy(() => import('@/components/panels/FloatingToolbar'));
-const PWAUpdatePrompt = lazy(() => import('@/components/ui/PWAUpdatePrompt').then(m => ({ default: m.PWAUpdatePrompt })));
+const PWAUpdatePrompt = lazy(() => import('@/components/ui/PWAUpdatePrompt').then((m) => ({ default: m.PWAUpdatePrompt })));
 
-/* ─── Context Menu ─── */
+const SEO_SUMMARY_ITEMS = [
+  'Infinite canvas workspace for diagrams, wireframes, and whiteboards',
+  'Shape, text, pen, and brush tools for visual composition',
+  'Layers panel and properties controls for precise editing',
+  'Smart guides, snap to grid, keyboard shortcuts, and canvas export',
+];
+
 const ContextMenu = ({ x, y, onClose, items }) => {
   useEffect(() => {
     const h = () => onClose();
     document.addEventListener('click', h);
     document.addEventListener('contextmenu', h);
-    return () => { document.removeEventListener('click', h); document.removeEventListener('contextmenu', h); };
+    return () => {
+      document.removeEventListener('click', h);
+      document.removeEventListener('contextmenu', h);
+    };
   }, [onClose]);
 
   return (
@@ -36,7 +45,7 @@ const ContextMenu = ({ x, y, onClose, items }) => {
       style={{ left: Math.min(x, window.innerWidth - 210), top: Math.min(y, window.innerHeight - 320) }}
       className="context-menu fixed"
     >
-      {items.map((item, i) =>
+      {items.map((item, i) => (
         item.divider ? (
           <div key={i} className="context-menu-separator" />
         ) : (
@@ -45,61 +54,74 @@ const ContextMenu = ({ x, y, onClose, items }) => {
             type="button"
             disabled={item.disabled}
             className={`context-menu-item w-full ${item.danger ? 'destructive' : ''} ${item.disabled ? 'opacity-40 pointer-events-none' : ''}`}
-            onClick={() => { item.onClick(); onClose(); }}
+            onClick={() => {
+              item.onClick();
+              onClose();
+            }}
           >
             {item.icon && React.isValidElement(item.icon) ? item.icon : null}
             <span className="flex-1 text-left">{item.label}</span>
             {item.shortcut && <span className="shortcut">{item.shortcut}</span>}
           </button>
         )
-      )}
+      ))}
     </motion.div>
   );
 };
 
-
-/* ─── Shortcuts Modal ─── */
 const SHORTCUT_GROUPS = [
-  { category: 'Tools', items: [
-    { key: 'V',          action: 'Select' },
-    { key: 'Q',          action: 'Lasso' },
-    { key: 'E',          action: 'Eraser' },
-    { key: 'R',          action: 'Rectangle' },
-    { key: 'C',          action: 'Circle' },
-    { key: 'T',          action: 'Text' },
-    { key: 'L',          action: 'Line' },
-    { key: 'A',          action: 'Arrow' },
-    { key: 'S',          action: 'Star' },
-    { key: 'P',          action: 'Polygon' },
-    { key: 'H',          action: 'Pan' },
-    { key: 'Space ↓',   action: 'Temporary Pan' },
-  ]},
-  { category: 'Actions', items: [
-    { key: 'Ctrl+Z',     action: 'Undo' },
-    { key: 'Ctrl+Shift+Z', action: 'Redo' },
-    { key: 'Ctrl+D',     action: 'Duplicate' },
-    { key: 'Ctrl+C',     action: 'Copy' },
-    { key: 'Ctrl+X',     action: 'Cut' },
-    { key: 'Ctrl+V',     action: 'Paste' },
-    { key: 'Del',        action: 'Delete' },
-    { key: 'Ctrl+A',     action: 'Select All' },
-    { key: 'Esc',        action: 'Deselect' },
-  ]},
-  { category: 'View', items: [
-    { key: 'Ctrl++',     action: 'Zoom In' },
-    { key: 'Ctrl+-',     action: 'Zoom Out' },
-    { key: 'Ctrl+0',     action: 'Reset Zoom' },
-    { key: 'Ctrl+1',     action: 'Fit to Screen' },
-    { key: 'G',          action: 'Toggle Grid' },
-    { key: 'U',          action: 'Toggle Guides' },
-    { key: '?',          action: 'Show Shortcuts' },
-  ]},
-  { category: 'Layer', items: [
-    { key: 'Ctrl+]',     action: 'Bring to Front' },
-    { key: 'Ctrl+[',     action: 'Send to Back' },
-    { key: 'Ctrl+⇧+]',  action: 'Bring Forward' },
-    { key: 'Ctrl+⇧+[',  action: 'Send Backward' },
-  ]},
+  {
+    category: 'Tools',
+    items: [
+      { key: 'V', action: 'Select' },
+      { key: 'Q', action: 'Lasso' },
+      { key: 'E', action: 'Eraser' },
+      { key: 'R', action: 'Rectangle' },
+      { key: 'C', action: 'Circle' },
+      { key: 'T', action: 'Text' },
+      { key: 'L', action: 'Line' },
+      { key: 'A', action: 'Arrow' },
+      { key: 'S', action: 'Star' },
+      { key: 'P', action: 'Polygon' },
+      { key: 'H', action: 'Pan' },
+      { key: 'Space Down', action: 'Temporary Pan' },
+    ],
+  },
+  {
+    category: 'Actions',
+    items: [
+      { key: 'Ctrl+Z', action: 'Undo' },
+      { key: 'Ctrl+Shift+Z', action: 'Redo' },
+      { key: 'Ctrl+D', action: 'Duplicate' },
+      { key: 'Ctrl+C', action: 'Copy' },
+      { key: 'Ctrl+X', action: 'Cut' },
+      { key: 'Ctrl+V', action: 'Paste' },
+      { key: 'Del', action: 'Delete' },
+      { key: 'Ctrl+A', action: 'Select All' },
+      { key: 'Esc', action: 'Deselect' },
+    ],
+  },
+  {
+    category: 'View',
+    items: [
+      { key: 'Ctrl++', action: 'Zoom In' },
+      { key: 'Ctrl+-', action: 'Zoom Out' },
+      { key: 'Ctrl+0', action: 'Reset Zoom' },
+      { key: 'Ctrl+1', action: 'Fit to Screen' },
+      { key: 'G', action: 'Toggle Grid' },
+      { key: 'U', action: 'Toggle Guides' },
+      { key: '?', action: 'Show Shortcuts' },
+    ],
+  },
+  {
+    category: 'Layer',
+    items: [
+      { key: 'Ctrl+]', action: 'Bring to Front' },
+      { key: 'Ctrl+[', action: 'Send to Back' },
+      { key: 'Ctrl+Shift+]', action: 'Bring Forward' },
+      { key: 'Ctrl+Shift+[', action: 'Send Backward' },
+    ],
+  },
 ];
 
 const ShortcutsModal = ({ onClose }) => (
@@ -118,7 +140,6 @@ const ShortcutsModal = ({ onClose }) => (
       className="bg-[hsl(var(--surface-elevated))] border border-border rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-auto"
       onClick={(e) => e.stopPropagation()}
     >
-      {/* Header */}
       <div className="sticky top-0 flex items-center justify-between px-6 py-4 border-b border-border bg-[hsl(var(--surface-elevated))] z-10">
         <div className="flex items-center gap-2">
           <Keyboard size={16} className="text-primary" />
@@ -133,7 +154,6 @@ const ShortcutsModal = ({ onClose }) => (
         </button>
       </div>
 
-      {/* Grid of shortcut groups */}
       <div className="p-6 grid grid-cols-2 gap-6">
         {SHORTCUT_GROUPS.map(({ category, items }) => (
           <div key={category}>
@@ -153,9 +173,9 @@ const ShortcutsModal = ({ onClose }) => (
   </motion.div>
 );
 
-/* ─── Status Bar ─── */
 const StatusBar = ({ onShowShortcuts }) => {
-  const { elements, selectedIds, zoom } = useCanvasStore();
+  const { elements, selectedIds } = useCanvasStore();
+
   return (
     <div className="status-bar">
       <div className="flex items-center gap-1.5">
@@ -181,7 +201,6 @@ const StatusBar = ({ onShowShortcuts }) => {
   );
 };
 
-/* ─── App ─── */
 function App() {
   const canvasContainerRef = useRef(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
@@ -192,13 +211,13 @@ function App() {
   const [rightCollapsed, setRightCollapsed] = useState(false);
 
   const {
-    initialize, activeTool, setActiveTool,
+    initialize, setActiveTool,
     undo, redo, deleteSelected, selectAll, clearSelection,
     duplicateSelected, copy, cut, paste,
     canUndo, canRedo, zoomIn, zoomOut, resetZoom, centerCanvas,
-    toggleGrid, toggleSnapToGrid, toggleSmartGuides,
+    toggleGrid, toggleSmartGuides,
     bringToFront, sendToBack, bringForward, sendBackward,
-    selectedIds, elements,
+    selectedIds,
   } = useCanvasStore();
 
   const showToast = useCallback((message, type = 'info') => {
@@ -209,7 +228,6 @@ function App() {
     initialize();
   }, [initialize]);
 
-  // Canvas container resize observer
   useEffect(() => {
     const update = () => {
       if (canvasContainerRef.current) {
@@ -217,73 +235,162 @@ function App() {
         setCanvasSize({ width, height });
       }
     };
+
     update();
+
     const ro = new ResizeObserver(update);
-    if (canvasContainerRef.current) ro.observe(canvasContainerRef.current);
+    if (canvasContainerRef.current) {
+      ro.observe(canvasContainerRef.current);
+    }
+
     return () => ro.disconnect();
   }, []);
 
-  // Keyboard shortcuts
   const handleKeyDown = useCallback((e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
-      if (e.key === 'Escape') e.target.blur();
+      if (e.key === 'Escape') {
+        e.target.blur();
+      }
       return;
     }
+
     const { key, ctrlKey, shiftKey, metaKey } = e;
     const isCtrl = ctrlKey || metaKey;
 
     if (key === ' ' && !isCtrl && !shiftKey) {
       e.preventDefault();
       const prev = useCanvasStore.getState().activeTool;
-      if (prev !== TOOLS.PAN) { window._previousTool = prev; setActiveTool(TOOLS.PAN); }
+      if (prev !== TOOLS.PAN) {
+        window._previousTool = prev;
+        setActiveTool(TOOLS.PAN);
+      }
       return;
     }
-    if (key === '?') { setShowShortcuts(true); return; }
+
+    if (key === '?') {
+      setShowShortcuts(true);
+      return;
+    }
 
     if (!isCtrl && !shiftKey) {
-      const toolMap = { 
-        v: TOOLS.SELECT, 
+      const toolMap = {
+        v: TOOLS.SELECT,
         q: TOOLS.LASSO,
-        e: TOOLS.ERASER, 
-        r: TOOLS.RECTANGLE, 
-        c: TOOLS.CIRCLE, 
-        t: TOOLS.TEXT, 
-        l: TOOLS.LINE, 
-        a: TOOLS.ARROW, 
-        s: TOOLS.STAR, 
-        p: TOOLS.POLYGON, 
-        h: TOOLS.PAN 
+        e: TOOLS.ERASER,
+        r: TOOLS.RECTANGLE,
+        c: TOOLS.CIRCLE,
+        t: TOOLS.TEXT,
+        l: TOOLS.LINE,
+        a: TOOLS.ARROW,
+        s: TOOLS.STAR,
+        p: TOOLS.POLYGON,
+        h: TOOLS.PAN,
       };
-      if (toolMap[key.toLowerCase()]) { setActiveTool(toolMap[key.toLowerCase()]); return; }
-      if (key.toLowerCase() === 'g') { toggleGrid(); return; }
-      if (key.toLowerCase() === 'u') { toggleSmartGuides(); return; }
+
+      if (toolMap[key.toLowerCase()]) {
+        setActiveTool(toolMap[key.toLowerCase()]);
+        return;
+      }
+
+      if (key.toLowerCase() === 'g') {
+        toggleGrid();
+        return;
+      }
+
+      if (key.toLowerCase() === 'u') {
+        toggleSmartGuides();
+        return;
+      }
     }
 
     if (isCtrl) {
       e.preventDefault();
       switch (key.toLowerCase()) {
-        case 'z': shiftKey ? redo() : undo(); return;
-        case 'y': redo(); return;
-        case 'a': selectAll(); return;
-        case 'd': duplicateSelected(); showToast('Duplicated', 'success'); return;
-        case 'c': copy(); showToast('Copied', 'success'); return;
-        case 'x': cut(); showToast('Cut', 'success'); return;
-        case 'v': paste(); showToast('Pasted', 'success'); return;
-        case '=': case '+': zoomIn(); return;
-        case '-': zoomOut(); return;
-        case '0': resetZoom(); return;
-        case '1': centerCanvas(); return;
-        case ']': shiftKey ? bringForward() : bringToFront(); return;
-        case '[': shiftKey ? sendBackward() : sendToBack(); return;
+        case 'z':
+          shiftKey ? redo() : undo();
+          return;
+        case 'y':
+          redo();
+          return;
+        case 'a':
+          selectAll();
+          return;
+        case 'd':
+          duplicateSelected();
+          showToast('Duplicated', 'success');
+          return;
+        case 'c':
+          copy();
+          showToast('Copied', 'success');
+          return;
+        case 'x':
+          cut();
+          showToast('Cut', 'success');
+          return;
+        case 'v':
+          paste();
+          showToast('Pasted', 'success');
+          return;
+        case '=':
+        case '+':
+          zoomIn();
+          return;
+        case '-':
+          zoomOut();
+          return;
+        case '0':
+          resetZoom();
+          return;
+        case '1':
+          centerCanvas();
+          return;
+        case ']':
+          shiftKey ? bringForward() : bringToFront();
+          return;
+        case '[':
+          shiftKey ? sendBackward() : sendToBack();
+          return;
+        default:
+          return;
       }
     }
 
     if (key === 'Delete' || key === 'Backspace') {
-      if (selectedIds.length > 0) { deleteSelected(); showToast('Deleted', 'info'); }
+      if (selectedIds.length > 0) {
+        deleteSelected();
+        showToast('Deleted', 'info');
+      }
       return;
     }
-    if (key === 'Escape') { clearSelection(); setActiveTool(TOOLS.SELECT); }
-  }, [setActiveTool, undo, redo, deleteSelected, selectAll, clearSelection, duplicateSelected, copy, cut, paste, zoomIn, zoomOut, resetZoom, centerCanvas, toggleGrid, toggleSmartGuides, bringToFront, sendToBack, bringForward, sendBackward, selectedIds, showToast]);
+
+    if (key === 'Escape') {
+      clearSelection();
+      setActiveTool(TOOLS.SELECT);
+    }
+  }, [
+    setActiveTool,
+    undo,
+    redo,
+    deleteSelected,
+    selectAll,
+    clearSelection,
+    duplicateSelected,
+    copy,
+    cut,
+    paste,
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    centerCanvas,
+    toggleGrid,
+    toggleSmartGuides,
+    bringToFront,
+    sendToBack,
+    bringForward,
+    sendBackward,
+    selectedIds,
+    showToast,
+  ]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -292,25 +399,28 @@ function App() {
 
   useEffect(() => {
     const up = (e) => {
-      if (e.key === ' ' && window._previousTool) { setActiveTool(window._previousTool); window._previousTool = null; }
+      if (e.key === ' ' && window._previousTool) {
+        setActiveTool(window._previousTool);
+        window._previousTool = null;
+      }
     };
+
     window.addEventListener('keyup', up);
     return () => window.removeEventListener('keyup', up);
   }, [setActiveTool]);
 
-  // Context menu
   const handleContextMenu = useCallback((e) => {
     e.preventDefault();
     setContextMenu({ x: e.clientX, y: e.clientY });
   }, []);
 
   const contextMenuItems = [
-    { icon: <Undo2 size={13} />, label: 'Undo',       shortcut: 'Ctrl+Z', onClick: undo,          disabled: !canUndo() },
+    { icon: <Undo2 size={13} />, label: 'Undo', shortcut: 'Ctrl+Z', onClick: undo, disabled: !canUndo() },
     { icon: <Undo2 size={13} className="scale-x-[-1]" />, label: 'Redo', shortcut: 'Ctrl+Y', onClick: redo, disabled: !canRedo() },
     { divider: true },
-    { icon: <Scissors size={13} />,    label: 'Cut',         shortcut: 'Ctrl+X', onClick: cut,    disabled: selectedIds.length === 0 },
-    { icon: <Copy size={13} />,        label: 'Copy',        shortcut: 'Ctrl+C', onClick: copy,   disabled: selectedIds.length === 0 },
-    { icon: <Clipboard size={13} />,   label: 'Paste',       shortcut: 'Ctrl+V', onClick: paste },
+    { icon: <Scissors size={13} />, label: 'Cut', shortcut: 'Ctrl+X', onClick: cut, disabled: selectedIds.length === 0 },
+    { icon: <Copy size={13} />, label: 'Copy', shortcut: 'Ctrl+C', onClick: copy, disabled: selectedIds.length === 0 },
+    { icon: <Clipboard size={13} />, label: 'Paste', shortcut: 'Ctrl+V', onClick: paste },
     { divider: true },
     { icon: <MousePointer2 size={13} />, label: 'Select All', shortcut: 'Ctrl+A', onClick: selectAll },
     { divider: true },
@@ -322,38 +432,70 @@ function App() {
       className="h-screen w-screen flex flex-col overflow-hidden bg-background text-foreground"
       onContextMenu={handleContextMenu}
     >
-      {/* ── Top Toolbar ── */}
-      <TopToolbar
-        onToggleShortcuts={() => setShowShortcuts(true)}
-        leftCollapsed={leftCollapsed}
-        rightCollapsed={rightCollapsed}
-        onToggleLeft={() => setLeftCollapsed(p => !p)}
-        onToggleRight={() => setRightCollapsed(p => !p)}
-      />
+      <a
+        href="#canvasflow-workspace"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[10000] focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:text-foreground focus:shadow-lg"
+      >
+        Skip to canvas workspace
+      </a>
 
-      {/* ── Main Body ── */}
-      <div className="flex-1 flex overflow-hidden min-h-0">
-        {/* Left Sidebar */}
+      <header className="sr-only">
+        <h1 id="canvasflow-title">CanvasFlow online infinite canvas editor</h1>
+        <p id="canvasflow-description">
+          CanvasFlow is a browser-based infinite canvas editor for diagrams, whiteboards,
+          wireframes, vector graphics, and visual planning with layers, shape tools, smart
+          guides, keyboard shortcuts, and export workflows.
+        </p>
+      </header>
+
+      <header aria-label="CanvasFlow toolbar">
+        <TopToolbar
+          onToggleShortcuts={() => setShowShortcuts(true)}
+          leftCollapsed={leftCollapsed}
+          rightCollapsed={rightCollapsed}
+          onToggleLeft={() => setLeftCollapsed((p) => !p)}
+          onToggleRight={() => setRightCollapsed((p) => !p)}
+        />
+      </header>
+
+      <main
+        className="flex-1 flex overflow-hidden min-h-0"
+        aria-labelledby="canvasflow-title"
+        aria-describedby="canvasflow-description"
+      >
         <Suspense fallback={<div className="w-[240px] border-r border-border bg-[hsl(var(--sidebar-background))]" />}>
-          <LeftSidebar collapsed={leftCollapsed} onToggle={() => setLeftCollapsed(p => !p)} />
+          <LeftSidebar collapsed={leftCollapsed} onToggle={() => setLeftCollapsed((p) => !p)} />
         </Suspense>
 
-        {/* Canvas Area */}
-        <div ref={canvasContainerRef} className="flex-1 relative overflow-hidden">
+        <div
+          ref={canvasContainerRef}
+          id="canvasflow-workspace"
+          className="flex-1 relative overflow-hidden"
+        >
+          <section className="sr-only" aria-label="CanvasFlow feature summary">
+            <h2>What CanvasFlow helps you create</h2>
+            <p>
+              Use CanvasFlow to build flowcharts, user journeys, whiteboards, wireframes,
+              visual plans, and vector layouts directly in the browser.
+            </p>
+            <ul>
+              {SEO_SUMMARY_ITEMS.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </section>
+
           {canvasSize.width > 0 && (
             <Canvas width={canvasSize.width} height={canvasSize.height} />
           )}
 
-          {/* Floating Toolbar */}
           <Suspense fallback={null}>
             <FloatingToolbar />
           </Suspense>
 
-          {/* Status Bar */}
           <StatusBar onShowShortcuts={() => setShowShortcuts(true)} />
         </div>
 
-        {/* Right — Properties */}
         <Suspense fallback={<div className="w-[240px] border-l border-border bg-[hsl(var(--sidebar-background))]" />}>
           <AnimatePresence initial={false}>
             {!rightCollapsed && (
@@ -364,9 +506,8 @@ function App() {
             )}
           </AnimatePresence>
         </Suspense>
-      </div>
+      </main>
 
-      {/* ── Overlays ── */}
       <AnimatePresence>
         {contextMenu && (
           <ContextMenu
@@ -378,17 +519,17 @@ function App() {
         )}
       </AnimatePresence>
 
-      <Toaster 
-        position="bottom-center" 
-        expand={false} 
-        theme={useTheme().theme === 'dark' ? 'dark' : (useTheme().theme === 'high-contrast' ? 'dark' : 'light')} 
+      <Toaster
+        position="bottom-center"
+        expand={false}
+        theme={useTheme().theme === 'dark' ? 'dark' : (useTheme().theme === 'high-contrast' ? 'dark' : 'light')}
         toastOptions={{
           style: {
             background: 'hsl(var(--surface-elevated))',
             border: '1px solid hsl(var(--border))',
             color: 'hsl(var(--foreground))',
             borderRadius: '12px',
-          }
+          },
         }}
       />
 
@@ -402,7 +543,10 @@ function App() {
             title={confirmation.title}
             message={confirmation.message}
             type={confirmation.type}
-            onConfirm={() => { confirmation.onConfirm(); setConfirmation(null); }}
+            onConfirm={() => {
+              confirmation.onConfirm();
+              setConfirmation(null);
+            }}
             onCancel={() => setConfirmation(null)}
           />
         )}

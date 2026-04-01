@@ -8,11 +8,12 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['masked-icon.svg', 'architecture.svg', 'og-image.svg'],
       manifest: {
-        name: 'CanvasFlow - Infinite Canvas Editor',
+        id: '/',
+        name: 'CanvasFlow - Online Infinite Canvas Editor',
         short_name: 'CanvasFlow',
-        description: 'A production-grade infinite canvas editor for vector graphics',
+        description: 'An online infinite canvas editor for diagrams, whiteboards, wireframes, vector graphics, and visual planning.',
         theme_color: '#0F172A',
         background_color: '#0F172A',
         display: 'standalone',
@@ -21,30 +22,34 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: 'pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
+            src: 'masked-icon.svg',
+            sizes: 'any',
+            type: 'image/svg+xml'
           },
           {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
+            src: 'masked-icon.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
             purpose: 'any maskable'
           }
         ],
         categories: ['productivity', 'utilities', 'design'],
+        screenshots: [
+          {
+            src: 'og-image.svg',
+            sizes: '1200x630',
+            type: 'image/svg+xml',
+            form_factor: 'wide',
+            label: 'CanvasFlow infinite canvas editor preview'
+          }
+        ],
         shortcuts: [
           {
             name: 'New Canvas',
             short_name: 'New',
             description: 'Start a new canvas',
             url: '/?new',
-            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+            icons: [{ src: 'masked-icon.svg', sizes: 'any', type: 'image/svg+xml' }]
           }
         ],
         share_target: {

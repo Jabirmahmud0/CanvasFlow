@@ -16,21 +16,58 @@ import { ToolButton } from '@/components/ui/Tooltip';
 
 /* ─── Logo ─── */
 const Logo = () => (
-  <div className="flex items-center gap-2 select-none">
-    <div className="relative w-7 h-7">
-      <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary to-violet-500 opacity-90" />
-      <div className="absolute inset-[3px] rounded-md bg-background/30 flex items-center justify-center">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <rect x="1" y="1" width="5" height="5" rx="1" fill="white" opacity="0.9" />
-          <rect x="8" y="1" width="5" height="5" rx="1" fill="white" opacity="0.6" />
-          <rect x="1" y="8" width="5" height="5" rx="1" fill="white" opacity="0.6" />
-          <rect x="8" y="8" width="5" height="5" rx="1" fill="white" opacity="0.9" />
+  <div className="flex items-center gap-2.5 select-none group px-1">
+    <div className="relative w-8 h-8 flex items-center justify-center">
+      {/* Background Gradient Glow (Visible on Hover) */}
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-primary/30 via-violet-500/30 to-fuchsia-500/30 blur-md opacity-0 group-hover:opacity-100 transition-all duration-500 scale-110" />
+      
+      {/* Main Icon Container */}
+      <div className="relative w-7.5 h-7.5 rounded-lg bg-gradient-to-br from-primary via-primary/90 to-violet-600 shadow-lg shadow-primary/20 flex items-center justify-center overflow-hidden border border-white/10">
+        {/* Glass highlight effect */}
+        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-white/20 rotate-45 transition-transform duration-700 group-hover:translate-x-full group-hover:translate-y-full" />
+        
+        {/* The Modern Palette SVG */}
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative z-10">
+          <path 
+            d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2Z" 
+            fill="white" 
+            fillOpacity="0.1" 
+          />
+          <path 
+            d="M12 22C17.52 22 22 17.52 22 12H12V22Z" 
+            fill="white" 
+            fillOpacity="0.15" 
+          />
+          {/* Flow Swoosh */}
+          <path 
+            d="M4 12C4 12 7 8 12 8C17 8 20 12 20 12" 
+            stroke="white" 
+            strokeWidth="2.5" 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            className="drop-shadow-sm"
+          />
+          {/* Palette Paint Dots */}
+          <circle cx="8" cy="16" r="1.5" fill="white" />
+          <circle cx="12" cy="18" r="1.5" fill="white" fillOpacity="0.7" />
+          <circle cx="16" cy="16" r="1.5" fill="white" fillOpacity="0.4" />
         </svg>
       </div>
     </div>
-    <span className="text-[13px] font-semibold text-foreground hidden sm:block tracking-tight">
-      Canvas<span className="text-primary">Flow</span>
-    </span>
+    
+    <div className="flex flex-col leading-tight cursor-default">
+      <div className="flex items-center">
+        <span className="text-[15px] font-extrabold tracking-tight text-foreground transition-all group-hover:text-primary">
+          Canvas
+        </span>
+        <span className="text-primary font-black ml-0.5 text-[15px]">
+          Flow
+        </span>
+      </div>
+      <span className="text-[8.5px] font-bold text-muted-foreground uppercase tracking-[0.15em] mt-0.5 opacity-50 group-hover:opacity-80 transition-opacity">
+        Creative Studio
+      </span>
+    </div>
   </div>
 );
 

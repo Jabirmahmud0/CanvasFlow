@@ -1,28 +1,143 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-BD">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="CanvasFlow — A production-grade infinite canvas editor with layers, smart guides, and multi-theme support." />
-    <meta name="theme-color" content="#0F172A" />
-    <meta property="og:title" content="CanvasFlow — Infinite Canvas Editor" />
-    <meta property="og:description" content="Professional infinite canvas editor built with React and Konva." />
-    <title>CanvasFlow — Infinite Canvas Editor</title>
+    <title>CanvasFlow | Online Infinite Canvas Editor for Diagrams and Design</title>
+    <meta
+      name="description"
+      content="CanvasFlow is an online infinite canvas editor for diagrams, whiteboards, wireframes, vector graphics, and visual planning with layers, smart guides, shape tools, keyboard shortcuts, and export-ready canvases."
+    />
+    <meta
+      name="keywords"
+      content="CanvasFlow, online infinite canvas editor, canvas editor, whiteboard app, diagram maker, vector editor, wireframe tool, flowchart editor, design canvas, visual planning software"
+    />
+    <meta
+      name="robots"
+      content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"
+    />
+    <meta name="author" content="CanvasFlow" />
+    <meta name="application-name" content="CanvasFlow" />
+    <meta name="apple-mobile-web-app-title" content="CanvasFlow" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F8FAFC" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0F172A" />
+    <link rel="canonical" href="https://canvasflow.pro.bd/" />
+    <link rel="alternate" hreflang="en" href="https://canvasflow.pro.bd/" />
+    <link rel="alternate" hreflang="x-default" href="https://canvasflow.pro.bd/" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/masked-icon.svg" type="image/svg+xml" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="CanvasFlow" />
+    <meta property="og:url" content="https://canvasflow.pro.bd/" />
+    <meta property="og:title" content="CanvasFlow | Online Infinite Canvas Editor" />
+    <meta
+      property="og:description"
+      content="Create diagrams, whiteboards, wireframes, and vector layouts on an infinite canvas with layers, smart guides, and keyboard-first controls."
+    />
+    <meta property="og:image" content="https://canvasflow.pro.bd/og-image.svg" />
+    <meta
+      property="og:image:alt"
+      content="CanvasFlow social preview showing an infinite canvas editor workspace"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="CanvasFlow | Online Infinite Canvas Editor" />
+    <meta
+      name="twitter:description"
+      content="A browser-based infinite canvas editor for diagrams, whiteboards, wireframes, and vector design workflows."
+    />
+    <meta name="twitter:image" content="https://canvasflow.pro.bd/og-image.svg" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://canvasflow.pro.bd/#website",
+            "url": "https://canvasflow.pro.bd/",
+            "name": "CanvasFlow",
+            "description": "CanvasFlow is an online infinite canvas editor for diagrams, whiteboards, wireframes, vector graphics, and visual planning.",
+            "inLanguage": "en",
+            "publisher": {
+              "@id": "https://canvasflow.pro.bd/#organization"
+            }
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://canvasflow.pro.bd/#organization",
+            "name": "CanvasFlow",
+            "url": "https://canvasflow.pro.bd/",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://canvasflow.pro.bd/masked-icon.svg"
+            }
+          },
+          {
+            "@type": "SoftwareApplication",
+            "@id": "https://canvasflow.pro.bd/#application",
+            "name": "CanvasFlow",
+            "url": "https://canvasflow.pro.bd/",
+            "applicationCategory": "DesignApplication",
+            "operatingSystem": "Web",
+            "description": "CanvasFlow is a browser-based infinite canvas editor for visual planning, whiteboarding, wireframing, diagramming, and vector design.",
+            "keywords": "online infinite canvas editor, diagram maker, whiteboard app, vector editor, wireframe tool, flowchart editor",
+            "featureList": [
+              "Infinite canvas workspace",
+              "Shape tools and text editing",
+              "Layers and properties panels",
+              "Smart guides and snap to grid",
+              "Keyboard shortcuts",
+              "Import and export canvas data"
+            ],
+            "image": "https://canvasflow.pro.bd/og-image.svg",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            },
+            "publisher": {
+              "@id": "https://canvasflow.pro.bd/#organization"
+            }
+          }
+        ]
+      }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;500;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;500;600&family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
-      /* Prevent FOUC */
-      html { visibility: hidden; }
-      html.theme-loaded { visibility: visible; }
+      html {
+        visibility: hidden;
+      }
+
+      html.theme-loaded {
+        visibility: visible;
+      }
     </style>
   </head>
   <body>
     <div id="root"></div>
     <div id="portal-root"></div>
+    <noscript>
+      <section
+        style="max-width: 72rem; margin: 0 auto; padding: 2rem 1.5rem; font-family: Inter, Arial, sans-serif; line-height: 1.6;"
+      >
+        <h1 style="font-size: 2rem; margin-bottom: 1rem;">CanvasFlow</h1>
+        <p style="margin: 0 0 1rem;">
+          CanvasFlow is an online infinite canvas editor for diagrams, whiteboards,
+          wireframes, vector graphics, and visual planning.
+        </p>
+        <p style="margin: 0;">
+          Enable JavaScript to use the full editor with layers, shape tools, text
+          editing, smart guides, keyboard shortcuts, and export workflows.
+        </p>
+      </section>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
     <script>
-      // Apply theme immediately to prevent flash
       (function() {
         const theme = localStorage.getItem('canvasflow-theme') || 'dark';
         document.documentElement.className = theme;

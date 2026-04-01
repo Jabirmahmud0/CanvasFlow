@@ -24,12 +24,20 @@ dist-ssr
 *.sln
 *.sw?
 
+# Qwen Code
+.qwen/*
+!.qwen/output-language.md
+
 # Environment variables
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env*.local
+
+# Vercel
+.vercel
 
 # Build output
 build
@@ -42,6 +50,11 @@ coverage
 # Testing
 .vitest
 test-results
+playwright-report
+playwright/.cache
+
+# Storybook
+storybook-static
 
 # Misc
 .cache
