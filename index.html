@@ -16,9 +16,10 @@
       name="robots"
       content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"
     />
-    <meta name="author" content="CanvasFlow" />
+    <meta name="author" content="Jabir Mahmud" />
     <meta name="application-name" content="CanvasFlow" />
     <meta name="apple-mobile-web-app-title" content="CanvasFlow" />
+    <meta name="generator" content="Built by Jabir Mahmud - jabir.pro.bd" />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F8FAFC" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0F172A" />
     <link rel="canonical" href="https://canvasflow.pro.bd/" />
@@ -52,6 +53,48 @@
         "@context": "https://schema.org",
         "@graph": [
           {
+            "@type": "Person",
+            "@id": "https://canvasflow.pro.bd/#person",
+            "name": "Jabir Mahmud",
+            "url": "https://jabir.pro.bd/",
+            "image": "https://jabir.pro.bd/og-image.png",
+            "sameAs": [
+              "https://github.com/Jabirmahmud0",
+              "https://www.linkedin.com/in/jabirmahmud0/",
+              "https://jabir.pro.bd/",
+              "https://jabx.pro.bd/"
+            ],
+            "jobTitle": "Software Engineer",
+            "worksFor": {
+              "@type": "Organization",
+              "@id": "https://jabx.pro.bd/#organization",
+              "name": "JabX",
+              "url": "https://jabx.pro.bd/"
+            },
+            "knowsAbout": [
+              "React",
+              "TypeScript",
+              "Frontend Development",
+              "Canvas API",
+              "Web Applications",
+              "Next.js",
+              "Node.js",
+              "Full-Stack Development"
+            ],
+            "creatorOf": {
+              "@id": "https://canvasflow.pro.bd/#application"
+            }
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://jabx.pro.bd/#organization",
+            "name": "JabX",
+            "url": "https://jabx.pro.bd/",
+            "founder": {
+              "@id": "https://canvasflow.pro.bd/#person"
+            }
+          },
+          {
             "@type": "WebSite",
             "@id": "https://canvasflow.pro.bd/#website",
             "url": "https://canvasflow.pro.bd/",
@@ -59,7 +102,7 @@
             "description": "CanvasFlow is an online infinite canvas editor for diagrams, whiteboards, wireframes, vector graphics, and visual planning.",
             "inLanguage": "en",
             "publisher": {
-              "@id": "https://canvasflow.pro.bd/#organization"
+              "@id": "https://canvasflow.pro.bd/#person"
             }
           },
           {
@@ -70,6 +113,9 @@
             "logo": {
               "@type": "ImageObject",
               "url": "https://canvasflow.pro.bd/masked-icon.svg"
+            },
+            "founder": {
+              "@id": "https://canvasflow.pro.bd/#person"
             }
           },
           {
@@ -95,9 +141,18 @@
               "price": "0",
               "priceCurrency": "USD"
             },
+            "author": {
+              "@id": "https://canvasflow.pro.bd/#person"
+            },
             "publisher": {
-              "@id": "https://canvasflow.pro.bd/#organization"
-            }
+              "@id": "https://canvasflow.pro.bd/#person"
+            },
+            "developmentTool": [
+              "React",
+              "TypeScript",
+              "Vite",
+              "Tailwind CSS"
+            ]
           }
         ]
       }
@@ -125,10 +180,15 @@
       <section
         style="max-width: 72rem; margin: 0 auto; padding: 2rem 1.5rem; font-family: Inter, Arial, sans-serif; line-height: 1.6;"
       >
-        <h1 style="font-size: 2rem; margin-bottom: 1rem;">CanvasFlow</h1>
+        <h1 style="font-size: 2rem; margin-bottom: 1rem;">CanvasFlow - Online Infinite Canvas Editor</h1>
         <p style="margin: 0 0 1rem;">
           CanvasFlow is an online infinite canvas editor for diagrams, whiteboards,
           wireframes, vector graphics, and visual planning.
+        </p>
+        <p style="margin: 0 0 1rem; color: #64748b; font-size: 0.95rem;">
+          <strong>Built by Jabir Mahmud</strong> - Software Engineer & Full-Stack Developer.
+          Founder at <a href="https://jabx.pro.bd/" style="color: #3b82f6;">JabX</a>.
+          Visit <a href="https://jabir.pro.bd/" style="color: #3b82f6;">jabir.pro.bd</a>
         </p>
         <p style="margin: 0;">
           Enable JavaScript to use the full editor with layers, shape tools, text

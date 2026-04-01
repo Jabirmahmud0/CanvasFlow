@@ -546,9 +546,27 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
+## 👨‍💻 Author
+
+**Jabir Mahmud** - Software Engineer & Full-Stack Developer
+
+- 🌐 Portfolio: [jabir.pro.bd](https://jabir.pro.bd/)
+- 🏢 Brand: [jabx.pro.bd](https://jabx.pro.bd/)
+- 💼 LinkedIn: [@jabirmahmud0](https://www.linkedin.com/in/jabirmahmud0/)
+- 🐙 GitHub: [@Jabirmahmud0](https://github.com/Jabirmahmud0)
+- 📧 Email: [Contact via GitHub](https://github.com/Jabirmahmud0)
+
+### About the Author
+
+Jabir Mahmud is a Software Engineer & Full-Stack Developer from Dhaka, Bangladesh. Expert in React, Next.js, Node.js, and TypeScript. Founder of [JabX](https://jabx.pro.bd/). Passionate about building performant web applications with exceptional user experiences.
+
+**Skills:** React • TypeScript • Next.js • Node.js • Frontend Architecture • Canvas API • Performance Optimization • Accessibility • Full-Stack Development
+
+---
+
 <div align="center">
 
-**Built with ❤️ using React + Vite + Konva**
+**Built with ❤️ by [Jabir Mahmud](https://jabir.pro.bd/) - Founder at [JabX](https://jabx.pro.bd/)**
 
 [Back to top](#canvasflow)
 

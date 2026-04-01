@@ -1,12 +1,20 @@
 {
   "name": "canvasflow",
-  "private": true,
   "version": "1.0.0",
-  "type": "module",
   "description": "A production-grade infinite canvas editor built with React",
+  "author": {
+    "name": "Jabir Mahmud",
+    "email": "contact@jabir.pro.bd",
+    "url": "https://jabir.pro.bd/"
+  },
+  "private": true,
+  "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:clean": "rm -rf node_modules/.vite && vite",
+    "dev:force": "vite --force",
     "build": "vite build",
+    "build:analyze": "vite build --sourcemap && npx vite-bundle-visualizer",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",

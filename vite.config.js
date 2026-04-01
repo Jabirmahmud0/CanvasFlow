@@ -139,25 +139,83 @@ export default defineConfig({
     // Code splitting configuration
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Vendor chunks - separate large dependencies
-          'vendor-react': ['react', 'react-dom', 'react-konva', 'konva'],
-          'vendor-animation': ['framer-motion'],
-          'vendor-state': ['zustand'],
-          'vendor-ui': [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-select',
-            '@radix-ui/react-slider',
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-tooltip',
-          ],
-          'vendor-utils': [
-            'lucide-react',
-            'clsx',
-            'tailwind-merge',
-            'class-variance-authority',
-          ],
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            // Core React stack - must be checked first
+            if (id.includes('/react/') || id.includes('/react-dom/')) {
+              return 'vendor-core'
+            }
+            // Canvas and graphics
+            if (id.includes('/react-konva/') || id.includes('/konva/')) {
+              return 'vendor-canvas'
+            }
+            // Animation
+            if (id.includes('/framer-motion/')) {
+              return 'vendor-animation'
+            }
+            // State management
+            if (id.includes('/zustand/')) {
+              return 'vendor-state'
+            }
+            // Form handling
+            if (id.includes('/react-hook-form/') || id.includes('/@hookform/')) {
+              return 'vendor-form'
+            }
+            // Validation
+            if (id.includes('/zod/')) {
+              return 'vendor-validation'
+            }
+            // Charts
+            if (id.includes('/recharts/')) {
+              return 'vendor-charts'
+            }
+            // Date utilities
+            if (id.includes('/date-fns/') || id.includes('/react-day-picker/')) {
+              return 'vendor-dates'
+            }
+            // Radix UI and other UI libraries
+            if (id.includes('/@radix-ui/')) {
+              return 'vendor-ui'
+            }
+            if (id.includes('/cmdk/')) {
+              return 'vendor-command'
+            }
+            if (id.includes('/embla-carousel/')) {
+              return 'vendor-carousel'
+            }
+            if (id.includes('/input-otp/')) {
+              return 'vendor-input-otp'
+            }
+            if (id.includes('/vaul/')) {
+              return 'vendor-drawer'
+            }
+            if (id.includes('/react-resizable-panels/')) {
+              return 'vendor-resizable'
+            }
+            // Icons and utilities
+            if (id.includes('/lucide-react/')) {
+              return 'vendor-icons'
+            }
+            if (id.includes('/clsx/') || id.includes('/tailwind-merge/') || id.includes('/class-variance-authority/')) {
+              return 'vendor-classnames'
+            }
+            if (id.includes('/tailwindcss-animate/')) {
+              return 'vendor-animation-utils'
+            }
+            // Theme
+            if (id.includes('/next-themes/')) {
+              return 'vendor-theme'
+            }
+            // Error monitoring
+            if (id.includes('/@sentry/')) {
+              return 'vendor-monitoring'
+            }
+            // Notifications
+            if (id.includes('/sonner/')) {
+              return 'vendor-notifications'
+            }
+          }
+          // Don't return a default value to avoid circular dependencies
         },
       },
     },

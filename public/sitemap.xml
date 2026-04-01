@@ -10,8 +10,8 @@
     <priority>1.0</priority>
     <image:image>
       <image:loc>https://canvasflow.pro.bd/og-image.svg</image:loc>
-      <image:title>CanvasFlow infinite canvas editor</image:title>
-      <image:caption>CanvasFlow online infinite canvas editor for diagrams and design</image:caption>
+      <image:title>CanvasFlow infinite canvas editor by Jabir Mahmud</image:title>
+      <image:caption>CanvasFlow - Online infinite canvas editor created by Jabir Mahmud, founder of JabX. Built with React, TypeScript, and Konva for diagrams, whiteboards, and wireframes.</image:caption>
     </image:image>
   </url>
 </urlset>
