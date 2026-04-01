@@ -12,7 +12,7 @@ import {
 import { useCanvasStore } from '@/store/useCanvasStore';
 import { useTheme } from '@/hooks/useTheme';
 import { TOOLS, CANVAS } from '@/constants';
-import { ToolButton } from '@/components/ui/Tooltip';
+import { ToolButton } from '@/components/ui/tooltip';
 
 /* ─── Logo ─── */
 const Logo = () => (

@@ -6,7 +6,7 @@ import {
   Plus, AlignJustify,
 } from 'lucide-react';
 import { useCanvasStore } from '@/store/useCanvasStore';
-import { ToolButton } from '@/components/ui/Tooltip';
+import { ToolButton } from '@/components/ui/tooltip';
 
 /* ─── Element type metadata ─── */
 const TYPE_META = {

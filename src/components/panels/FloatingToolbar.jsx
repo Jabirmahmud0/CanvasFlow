@@ -7,7 +7,7 @@ import {
   AlignStartVertical, AlignEndVertical,
 } from 'lucide-react';
 import { useCanvasStore } from '@/store/useCanvasStore';
-import { ToolButton } from '@/components/ui/Tooltip';
+import { ToolButton } from '@/components/ui/tooltip';
 
 const FloatingToolbar = () => {
   const {
