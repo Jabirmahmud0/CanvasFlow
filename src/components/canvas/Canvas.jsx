@@ -299,10 +299,12 @@ const Canvas = ({ width, height }) => {
         startEditing(id);
         const textEl = elements.find(el => el.id === id) || newElement;
         const screenPos = worldToScreen(textEl.x, textEl.y);
+        const stageBox = stageRef.current?.container().getBoundingClientRect() || { left: 0, top: 0 };
+        
         setTextEditor({
           id,
-          x: screenPos.x,
-          y: screenPos.y,
+          x: stageBox.left + screenPos.x,
+          y: stageBox.top + screenPos.y,
           text: textEl.text,
           fontSize: (textEl.fontSize || 16) * zoom,
           fontFamily: textEl.fontFamily || 'Inter, sans-serif',
@@ -659,10 +661,12 @@ const Canvas = ({ width, height }) => {
     if (element.type === 'text') {
       startEditing(element.id);
       const screenPos = worldToScreen(element.x, element.y);
+      const stageBox = stageRef.current?.container().getBoundingClientRect() || { left: 0, top: 0 };
+      
       setTextEditor({
         id: element.id,
-        x: screenPos.x,
-        y: screenPos.y,
+        x: stageBox.left + screenPos.x,
+        y: stageBox.top + screenPos.y,
         text: element.text,
         fontSize: element.fontSize || 16,
         fontFamily: element.fontFamily || 'Inter, sans-serif',
@@ -868,6 +872,7 @@ const Canvas = ({ width, height }) => {
               element={element}
               isEraserActive={activeTool === TOOLS.ERASER}
               isSelected={selectedIds.includes(element.id)}
+              isEditing={textEditor?.id === element.id}
               onClick={handleElementClick}
               onDoubleClick={handleElementDoubleClick}
               onDragMove={handleElementDragMove}

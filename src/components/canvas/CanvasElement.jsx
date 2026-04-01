@@ -42,6 +42,7 @@ const Arrow = ({ points, pointerLength, pointerWidth, ...props }) => {
 const CanvasElement = ({
   element,
   isSelected,
+  isEditing,
   isEraserActive,
   onClick,
   onDoubleClick,
@@ -52,10 +53,9 @@ const CanvasElement = ({
 }) => {
   const shapeRef = useRef(null);
   const transformerRef = useRef(null);
-  const [isEditing, setIsEditing] = useState(false);
 
   // Hide element when being edited (text editor overlay is shown instead)
-  const isBeingEdited = element.type === 'text' && isSelected && isEditing;
+  const isBeingEdited = element.type === 'text' && isEditing;
 
   useEffect(() => {
     if (isSelected && transformerRef.current && shapeRef.current) {
