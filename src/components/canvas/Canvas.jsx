@@ -174,7 +174,30 @@ const Canvas = ({ width, height }) => {
     addToHistory,
     setActiveTool,
     deleteElement,
+    updateElements,
   } = useCanvasStore();
+
+  // Handle theme-based color flipping for existing "default" text elements
+  const prevThemeRef = useRef(theme);
+  useEffect(() => {
+    if (prevThemeRef.current !== theme) {
+      // Contrast colors for transition
+      const fromColor = prevThemeRef.current === 'light' ? '#0F172A' : '#F8FAFC';
+      const toColor = theme === 'light' ? '#0F172A' : '#F8FAFC';
+
+      // Find all text elements that use the "default" color of the previous theme
+      const elementsToUpdate = elements
+        .filter(el => el.type === 'text' && (el.fill === fromColor || (prevThemeRef.current === 'light' && el.fill === '#000000') || (prevThemeRef.current !== 'light' && el.fill === '#FFFFFF')))
+        .map(el => el.id);
+
+      if (elementsToUpdate.length > 0) {
+        updateElements(elementsToUpdate, { fill: toColor });
+        addToHistory();
+      }
+      
+      prevThemeRef.current = theme;
+    }
+  }, [theme, elements, updateElements, addToHistory]);
 
   // Convert screen to world coordinates
   const screenToWorld = useCallback((screenX, screenY) => {
@@ -279,13 +302,14 @@ const Canvas = ({ width, height }) => {
 
     // Text tool - create text immediately
     if (activeTool === TOOLS.TEXT) {
+      const textColor = theme === 'light' ? '#0F172A' : '#F8FAFC';
       const newElement = {
         type: 'text',
         x: worldPos.x,
         y: worldPos.y,
         text: 'Double-click to edit',
         fontSize: 16,
-        fill: '#F8FAFC',
+        fill: textColor,
         fontFamily: 'Inter, sans-serif',
       };
 
@@ -308,7 +332,7 @@ const Canvas = ({ width, height }) => {
           text: textEl.text,
           fontSize: (textEl.fontSize || 16) * zoom,
           fontFamily: textEl.fontFamily || 'Inter, sans-serif',
-          fill: textEl.fill || '#F8FAFC',
+          fill: textEl.fill || (theme === 'light' ? '#0F172A' : '#F8FAFC'),
         });
       }, 50);
       return;
@@ -670,7 +694,7 @@ const Canvas = ({ width, height }) => {
         text: element.text,
         fontSize: element.fontSize || 16,
         fontFamily: element.fontFamily || 'Inter, sans-serif',
-        fill: element.fill || '#F8FAFC',
+        fill: element.fill || (theme === 'light' ? '#0F172A' : '#F8FAFC'),
         width: element.width,
       });
     }
@@ -792,17 +816,27 @@ const Canvas = ({ width, height }) => {
           y -= height / 2;
         }
 
+        const props = { ...data.props };
+        // Flip text color if it doesn't contrast with current theme
+        if (data.elementType === 'text') {
+          if (theme === 'light' && (props.fill === '#FFFFFF' || props.fill === '#F8FAFC')) {
+            props.fill = '#0F172A';
+          } else if (theme !== 'light' && props.fill === '#0F172A') {
+            props.fill = '#F8FAFC';
+          }
+        }
+
         addElement({
           type: data.elementType,
           x,
           y,
-          ...data.props
+          ...props
         }, false);
       }
     } catch (err) {
       // Not a valid JSON payload, ignore
     }
-  }, [screenToWorld, addElement, selectElement]);
+  }, [screenToWorld, addElement, theme]);
 
   // Get selection bounds
   const bounds = getBounds();
